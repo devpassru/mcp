@@ -1,0 +1,53 @@
+{
+  "name": "@devpass/mcp",
+  "version": "1.0.0",
+  "description": "Unified MCP server for DevPass: RunPort tunnels, Submito forms, RunGate AI DNS/Gateway, and Adopto behavioral emails",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "devpass-mcp": "./build/index.js"
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "prepare": "npm run build",
+    "test": "node --test build/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devpassru/mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devpassru/mcp/issues"
+  },
+  "homepage": "https://devpass.ru",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "devpass",
+    "model-context-protocol",
+    "runport",
+    "submito",
+    "rungate",
+    "adopto",
+    "cursor",
+    "claude-code",
+    "windsurf"
+  ],
+  "author": "DevPass (https://devpass.ru)",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "dotenv": "^17.4.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0"
+  }
+}

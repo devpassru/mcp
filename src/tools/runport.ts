@@ -13,7 +13,11 @@ export function registerRunPortTools(server: McpServer): void {
         "Start a RunPort reverse SSH tunnel to expose a local port (e.g. 3000, 8080) to the internet with HTTPS. Returns public URL.",
       inputSchema: {
         port: z.number().int().min(1).max(65535).describe("Local port to expose (e.g. 3000)"),
-        subdomain: z.string().optional().describe("Requested subdomain (e.g. 'my-app'). Random if omitted."),
+        subdomain: z
+          .string()
+          .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format: must be 1-63 alphanumeric chars or hyphens, starting with alphanumeric")
+          .optional()
+          .describe("Requested subdomain (e.g. 'my-app'). Random if omitted."),
         review: z.boolean().optional().describe("Enable interactive visual feedback and client review mode on the tunnel."),
       },
     },
@@ -171,7 +175,10 @@ export function registerRunPortTools(server: McpServer): void {
     {
       description: "List visual feedback, annotations, and client review comments left on the preview tunnel.",
       inputSchema: {
-        subdomain: z.string().describe("Subdomain of the tunnel"),
+        subdomain: z
+          .string()
+          .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format")
+          .describe("Subdomain of the tunnel"),
         path: z.string().optional().describe("Filter comments by URL path (e.g. '/pricing')"),
         status: z.enum(["open", "resolved", "all"]).optional().describe("Filter status: 'open', 'resolved', or 'all'. Defaults to 'open'."),
       },
@@ -238,7 +245,10 @@ export function registerRunPortTools(server: McpServer): void {
     {
       description: "Mark a visual review comment as resolved after implementing changes.",
       inputSchema: {
-        subdomain: z.string().describe("Subdomain of the tunnel"),
+        subdomain: z
+          .string()
+          .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format")
+          .describe("Subdomain of the tunnel"),
         reviewId: z.string().describe("UUID of the review item to resolve"),
       },
     },

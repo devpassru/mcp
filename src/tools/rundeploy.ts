@@ -257,4 +257,60 @@ export function registerRunDeployTools(server: McpServer): void {
         body: { key, value },
       })
   );
+
+  server.registerTool(
+    "rundeploy_list_deploy_tokens",
+    {
+      description:
+        "List project-scoped CI/CD deploy tokens for a RunDeploy project (token secrets are never returned).",
+      inputSchema: {
+        project_id: z.string().min(1).describe("RunDeploy project ID"),
+      },
+    },
+    async ({ project_id }) =>
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens`)
+  );
+
+  server.registerTool(
+    "rundeploy_create_deploy_token",
+    {
+      description:
+        "Create a project-scoped deploy token (rdp_...) for CI/CD. It can ONLY publish deployments to this single project and has no access to other projects or DevPass services. Save the returned plainTextToken immediately.",
+      inputSchema: {
+        project_id: z.string().min(1).describe("RunDeploy project ID"),
+        name: z.string().min(1).max(80).describe("Human-readable token label (e.g. GitLab CI)"),
+        expires_in_days: z
+          .number()
+          .int()
+          .min(1)
+          .max(3650)
+          .optional()
+          .describe("Optional expiration in days (omit for non-expiring token)"),
+      },
+    },
+    async ({ project_id, name, expires_in_days }) =>
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens`, {
+        method: "POST",
+        body: {
+          name,
+          ...(expires_in_days !== undefined ? { expiresInDays: expires_in_days } : {}),
+        },
+      })
+  );
+
+  server.registerTool(
+    "rundeploy_revoke_deploy_token",
+    {
+      description: "Revoke a project-scoped deploy token so it can no longer publish deployments.",
+      inputSchema: {
+        project_id: z.string().min(1).describe("RunDeploy project ID"),
+        token_id: z.string().min(1).describe("Deploy token ID (e.g. dtok_...)"),
+      },
+    },
+    async ({ project_id, token_id }) =>
+      rundeployRequest(
+        `/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens/${encodeURIComponent(token_id)}`,
+        { method: "DELETE" }
+      )
+  );
 }

@@ -28,7 +28,7 @@ export function registerRunGateTools(server: McpServer): void {
                 service: "RunGate AI Gateway",
                 status: "active",
                 baseUrl: gatewayUrl,
-                apiKey: token.startsWith("dp_live_") ? token : "Set DEVPASS_TOKEN",
+                apiKey: token.startsWith("dp_live_") ? `${token.slice(0, 10)}...${token.slice(-4)}` : "Set DEVPASS_TOKEN",
                 recommendedModel: selectedModel,
                 compatibleModels: [
                   "claude-3-7-sonnet",
@@ -41,7 +41,7 @@ export function registerRunGateTools(server: McpServer): void {
                   "gemini-2.5-flash",
                 ],
                 usageExamples: {
-                  curl: `curl ${gatewayUrl}/chat/completions \\\n  -H "Authorization: Bearer ${token}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model": "${selectedModel}", "messages": [{"role": "user", "content": "Hello world!"}]}'`,
+                  curl: `curl ${gatewayUrl}/chat/completions \\\n  -H "Authorization: Bearer $DEVPASS_TOKEN" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model": "${selectedModel}", "messages": [{"role": "user", "content": "Hello world!"}]}'`,
                   openAiSdkJs: `import OpenAI from "openai";\n\nconst client = new OpenAI({\n  apiKey: process.env.DEVPASS_TOKEN,\n  baseURL: "${gatewayUrl}",\n});`,
                   python: `from openai import OpenAI\n\nclient = OpenAI(\n  api_key=os.environ.get("DEVPASS_TOKEN"),\n  base_url="${gatewayUrl}",\n)`,
                 },

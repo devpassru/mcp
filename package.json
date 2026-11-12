@@ -1,6 +1,6 @@
 {
   "name": "@devpass/mcp",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Unified MCP server for DevPass: RunPort tunnels, Submito forms, RunGate AI DNS/Gateway, RunPing uptime/SSL monitoring, Adopto behavioral emails, RunDeploy hosting, and Answero AI support chat",
   "main": "build/index.js",
   "type": "module",

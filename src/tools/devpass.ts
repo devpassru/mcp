@@ -9,6 +9,7 @@ export interface EntitlementsResponse {
     rungate: { tier: string; dns_devices: number; dns_active: boolean };
     submito: { tier: string; forms_limit: number; submissions_monthly: number };
     runport: { tier: string; max_tunnels: number; bandwidth_bytes: number; rps_limit: number };
+    runping?: { tier: string; monitors_limit: number; min_interval_sec: number; locations: string[]; custom_domains: boolean; status_pages_limit: number; retention_days: number };
     adopto: { tier: string; emails_monthly: number };
     rekuro?: { tier: string };
   };
@@ -19,7 +20,7 @@ export function registerDevPassTools(server: McpServer): void {
     "devpass_status",
     {
       description:
-        "Check DevPass account status, active subscription plan, and quotas for all services (RunPort, Submito, RunGate, Adopto).",
+        "Check DevPass account status, active subscription plan, and quotas for all services (RunPort, Submito, RunGate, RunPing, Adopto).",
       inputSchema: {
         token: z.string().optional().describe("Optional token override. If omitted, uses DEVPASS_TOKEN environment variable."),
       },
@@ -85,6 +86,7 @@ export function registerDevPassTools(server: McpServer): void {
                     runport: { status: "ready", tunnelsLimit: 5, domain: "runport.ru" },
                     submito: { status: "ready", submissionsMonthly: 5000, formsLimit: "unlimited" },
                     rungate: { status: "ready", smartDns: "enabled", gatewayUrl: "https://gateway.rungate.ru/v1" },
+                    runping: { status: "ready", monitorsLimit: 25, url: "https://runping.ru" },
                     adopto: { status: "ready", emailsMonthly: 5000 },
                   },
                 },
@@ -107,6 +109,7 @@ export function registerDevPassTools(server: McpServer): void {
                     runport: "available",
                     submito: "available",
                     rungate: "available",
+                    runping: "available",
                     adopto: "available",
                   },
                 },

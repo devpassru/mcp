@@ -6,6 +6,7 @@ Connect your AI coding agents in **Cursor**, **Claude Code**, **Windsurf**, and 
 - **RunPort** — instant reverse SSH tunnels to expose localhost with HTTPS and visual review mode.
 - **Submito** — forms backend and lead intake endpoints without writing server-side code.
 - **RunGate** — AI DNS (DoH) for direct access without VPN and unified AI Gateway proxy to LLMs.
+- **RunPing** — uptime, keyword, JSON, TCP, and SSL certificate monitoring with public status pages.
 - **Adopto** — user lifecycle event tracking and automated onboarding email sequences.
 
 ---
@@ -77,6 +78,14 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 * **`rungate_get_gateway_config`**: Get OpenAI-compatible baseUrl (`https://gateway.rungate.ru/v1`) and auth headers to call models (Claude, GPT-4o, DeepSeek) through RunGate.
 * **`rungate_check_dns`**: Get OS-specific instructions for configuring DNS-over-HTTPS (DoH).
 
+### RunPing (Uptime, SSL & Status Pages)
+* **`runping_list_monitors`**: List all uptime & SSL monitors with status, 24h/30d uptime, latency, and SSL expiration days.
+* **`runping_create_monitor`**: Create a new HTTP(S), keyword, JSON, or TCP port monitor with SSRF protection.
+* **`runping_get_incidents`**: Fetch recent downtime incidents and failure causes across workspace monitors.
+* **`runping_pause_monitor`**: Pause monitoring checks for a monitor by ID.
+* **`runping_resume_monitor`**: Resume monitoring checks for a paused monitor by ID.
+* **`runping_create_status_page`**: Create a public status page (`/s/:slug`) exposing selected monitors.
+
 ### Adopto (Behavioral Emails)
 * **`adopto_track_event`**: Track user events (e.g. `signup`, `form_submitted`, `payment_completed`) to trigger or halt onboarding campaigns.
 * **`adopto_list_sequences`**: List configured email sequences.
@@ -92,6 +101,7 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 | `RUNPORT_DOMAIN` | Base domain for public tunnels | `runport.ru` |
 | `SUBMITO_API_URL` | Submito API endpoint | `https://api.submito.ru` |
 | `RUNGATE_GATEWAY_URL` | AI Gateway endpoint | `https://gateway.rungate.ru/v1` |
+| `RUNPING_API_URL` | RunPing API endpoint | `https://runping.ru` |
 | `ADOPTO_API_URL` | Adopto API endpoint | `https://api.adopto.ru` |
 
 ---

@@ -6,6 +6,7 @@ import { registerDevPassTools } from "./tools/devpass.js";
 import { registerRunPortTools } from "./tools/runport.js";
 import { registerSubmitoTools } from "./tools/submito.js";
 import { registerRunGateTools } from "./tools/rungate.js";
+import { registerRunPingTools } from "./tools/runping.js";
 import { registerAdoptoTools } from "./tools/adopto.js";
 
 dotenv.config();
@@ -13,13 +14,14 @@ dotenv.config();
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "devpass",
-    version: "1.0.1",
+    version: "1.0.2",
   });
 
   registerDevPassTools(server);
   registerRunPortTools(server);
   registerSubmitoTools(server);
   registerRunGateTools(server);
+  registerRunPingTools(server);
   registerAdoptoTools(server);
 
   return server;

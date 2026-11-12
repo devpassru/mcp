@@ -8,6 +8,8 @@ Connect your AI coding agents in **Cursor**, **Claude Code**, **Windsurf**, and 
 - **RunGate** — AI DNS (DoH) for direct access without VPN and unified AI Gateway proxy to LLMs.
 - **RunPing** — uptime, keyword, JSON, TCP, and SSL certificate monitoring with public status pages.
 - **Adopto** — user lifecycle event tracking and automated onboarding email sequences.
+- **RunDeploy** — instant static/SPA/serverless hosting, atomic releases, custom domains, and encrypted env variables.
+- **Answero** — AI + Telegram support chat widget, FAQ knowledge base, and live operator replies.
 
 ---
 
@@ -90,6 +92,29 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 * **`adopto_track_event`**: Track user events (e.g. `signup`, `form_submitted`, `payment_completed`) to trigger or halt onboarding campaigns.
 * **`adopto_list_sequences`**: List configured email sequences.
 
+### RunDeploy (Hosting & Releases)
+* **`rundeploy_list_projects`**: List projects with production URLs, active deployments, and custom domains.
+* **`rundeploy_create_project`**: Create a new project with a `*.rundeploy.ru` subdomain.
+* **`rundeploy_list_deployments`**: List deployment history and active release ID for a project.
+* **`rundeploy_deploy_archive`**: Upload a local `.zip` or `.tar.gz` build archive and publish it atomically.
+* **`rundeploy_rollback_deployment`**: Instantly roll back to a previous valid deployment.
+* **`rundeploy_list_domains`**: List custom domains with DNS & SSL status.
+* **`rundeploy_add_domain`**: Attach a custom domain to a project.
+* **`rundeploy_verify_domain`**: Verify DNS records and trigger SSL certificate issuance.
+* **`rundeploy_list_env`**: List configured environment variable keys.
+* **`rundeploy_set_env`**: Create or update an encrypted environment variable.
+
+### Answero (AI + Telegram Support Chat)
+* **`answero_list_sites`**: List chat widget sites and plan limits.
+* **`answero_create_site`**: Create a new chat widget site and get its `siteKey`.
+* **`answero_get_widget_snippet`**: Generate the ready-to-paste `<script>` embed snippet for a site.
+* **`answero_list_knowledge`**: List FAQ and knowledge base documents for a site.
+* **`answero_add_knowledge`**: Add a FAQ, article, or raw text document for AI answers.
+* **`answero_list_conversations`**: List support chat conversations with optional site/status filters.
+* **`answero_get_conversation`**: Get full conversation details and message history.
+* **`answero_reply_conversation`**: Send an operator reply into a conversation.
+* **`answero_update_conversation_status`**: Update conversation status (`bot`, `waiting_operator`, `operator_active`, `closed`).
+
 ---
 
 ## Environment Variables
@@ -103,6 +128,8 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 | `RUNGATE_GATEWAY_URL` | AI Gateway endpoint | `https://gateway.rungate.ru/v1` |
 | `RUNPING_API_URL` | RunPing API endpoint | `https://runping.ru` |
 | `ADOPTO_API_URL` | Adopto API endpoint | `https://api.adopto.ru` |
+| `RUNDEPLOY_API_URL` | RunDeploy API endpoint | `https://rundeploy.ru` |
+| `ANSWERO_API_URL` | Answero API endpoint | `https://answero.ru` |
 
 ---
 

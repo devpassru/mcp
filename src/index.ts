@@ -11,12 +11,12 @@ import { registerAdoptoTools } from "./tools/adopto.js";
 import { registerRunDeployTools } from "./tools/rundeploy.js";
 import { registerAnsweroTools } from "./tools/answero.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "devpass",
-    version: "1.1.0",
+    version: "1.1.1",
   });
 
   registerDevPassTools(server);

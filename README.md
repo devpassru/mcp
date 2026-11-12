@@ -60,7 +60,7 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 ## Available Tools
 
 ### Account & Subscription
-* **`devpass_status`**: Inspect account status, active plan (DevPass Pro / Team), and service quotas.
+* **`devpass_status`**: Inspect account status, active plan (Free / DevPass Pro), and service quotas.
 
 ### RunPort (Localhost Tunnels)
 * **`runport_start_tunnel`**: Open a secure reverse tunnel for a local port (e.g. `3000`). Supports custom subdomains and visual client review mode (`review: true`).

@@ -74,48 +74,21 @@ export function registerDevPassTools(server: McpServer): void {
         }
 
         return {
+          isError: true,
           content: [
             {
               type: "text",
-              text: JSON.stringify(
-                {
-                  status: "active",
-                  tokenPrefix: activeToken.slice(0, 10) + "...",
-                  defaultPlan: "DevPass Pro (4 in 1)",
-                  services: {
-                    runport: { status: "ready", tunnelsLimit: 5, domain: "runport.ru" },
-                    submito: { status: "ready", submissionsMonthly: 5000, formsLimit: "unlimited" },
-                    rungate: { status: "ready", smartDns: "enabled", gatewayUrl: "https://gateway.rungate.ru/v1" },
-                    runping: { status: "ready", monitorsLimit: 25, url: "https://runping.ru" },
-                    adopto: { status: "ready", emailsMonthly: 5000 },
-                  },
-                },
-                null,
-                2
-              ),
+              text: `DevPass API error (${response.status}): failed to fetch billing entitlements.`,
             },
           ],
         };
-      } catch {
+      } catch (err) {
         return {
+          isError: true,
           content: [
             {
               type: "text",
-              text: JSON.stringify(
-                {
-                  status: "connected",
-                  tokenPrefix: activeToken.slice(0, 10) + "...",
-                  services: {
-                    runport: "available",
-                    submito: "available",
-                    rungate: "available",
-                    runping: "available",
-                    adopto: "available",
-                  },
-                },
-                null,
-                2
-              ),
+              text: `Failed to reach DevPass API: ${err instanceof Error ? err.message : String(err)}`,
             },
           ],
         };

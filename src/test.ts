@@ -30,9 +30,25 @@ test("createServer initializes MCP server with expected tools", async () => {
     "runping_pause_monitor",
     "runping_resume_monitor",
     "runping_create_status_page",
+    "adopto_list_projects",
+    "adopto_create_project",
+    "adopto_list_keys",
+    "adopto_create_key",
+    "adopto_revoke_key",
+    "adopto_create_template",
+    "adopto_get_template",
+    "adopto_update_template_draft",
+    "adopto_approve_template",
     "adopto_sync_user",
     "adopto_track_event",
     "adopto_list_sequences",
+    "adopto_get_sequence",
+    "adopto_create_sequence",
+    "adopto_update_sequence_draft",
+    "adopto_validate_sequence",
+    "adopto_publish_sequence",
+    "adopto_pause_sequence",
+    "adopto_resume_sequence",
     "rundeploy_list_projects",
     "rundeploy_create_project",
     "rundeploy_list_deployments",
@@ -284,6 +300,70 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
 
     assert.equal(calls[2].url, "https://api.adopto.example.test/v1/flows");
     assert.equal(calls[2].method, "GET");
+
+    // Owner project & key management + template & sequence management
+    process.env.DEVPASS_TOKEN = "dp_live_owner_test_token_123456";
+    const projectId = "11111111-1111-4111-8111-111111111111";
+    const tplId = "22222222-2222-4222-8222-222222222222";
+    const flowId = "33333333-3333-4333-8333-333333333333";
+
+    await client.callTool({ name: "adopto_list_projects", arguments: {} });
+    await client.callTool({
+      name: "adopto_create_project",
+      arguments: {
+        name: "RunGate",
+        url: "https://rungate.ru",
+        first_result: "DNS connected",
+        purchase_signal: "Trial expired",
+        idempotency_key: "44444444-4444-4444-8444-444444444444",
+      },
+    });
+    await client.callTool({
+      name: "adopto_create_key",
+      arguments: { project_id: projectId, scopes: ["events:write", "profiles:write"] },
+    });
+    await client.callTool({
+      name: "adopto_create_template",
+      arguments: {
+        name: "Trial expired",
+        subject: "Trial expired",
+        primary_url: "https://t.me/devpass_robot",
+        text: "Expired {{unsubscribeUrl}}",
+        html: "<p>Expired</p>",
+        api_key: "explicit_proj_key",
+      },
+    });
+    await client.callTool({
+      name: "adopto_approve_template",
+      arguments: { template_id: tplId, expected_revision: 1, api_key: "explicit_proj_key" },
+    });
+    await client.callTool({
+      name: "adopto_create_sequence",
+      arguments: {
+        definition: { schemaVersion: 1, name: "Trial flow" },
+        api_key: "explicit_proj_key",
+      },
+    });
+    await client.callTool({
+      name: "adopto_publish_sequence",
+      arguments: { flow_id: flowId, expected_draft_version: 1, api_key: "explicit_proj_key" },
+    });
+
+    assert.equal(calls.length, 10);
+    assert.equal(calls[3].url, "https://api.adopto.example.test/v1/projects");
+    assert.equal(calls[3].auth, "Bearer dp_live_owner_test_token_123456");
+    assert.equal(calls[4].url, "https://api.adopto.example.test/v1/projects");
+    assert.equal(calls[4].method, "POST");
+    assert.equal(calls[5].url, `https://api.adopto.example.test/v1/projects/${projectId}/keys`);
+    assert.equal(calls[5].auth, "Bearer dp_live_owner_test_token_123456");
+    assert.deepEqual(calls[5].body, { scopes: ["events:write", "profiles:write"] });
+    assert.equal(calls[6].url, "https://api.adopto.example.test/v1/templates");
+    assert.equal(calls[6].auth, "Bearer explicit_proj_key");
+    assert.equal(calls[7].url, `https://api.adopto.example.test/v1/templates/${tplId}/versions`);
+    assert.deepEqual(calls[7].body, { expectedRevision: 1 });
+    assert.equal(calls[8].url, "https://api.adopto.example.test/v1/flows");
+    assert.equal(calls[9].url, `https://api.adopto.example.test/v1/flows/${flowId}/publish`);
+    assert.deepEqual(calls[9].body, { expectedDraftVersion: 1 });
   } finally {
     globalThis.fetch = origFetch;
     if (origToken === undefined) delete process.env.DEVPASS_TOKEN;

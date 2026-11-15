@@ -102,8 +102,25 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 
 ### Adopto (Behavioral Emails)
 
+- **`adopto_list_projects`**: List all Adopto projects owned by the authenticated DevPass account.
+- **`adopto_create_project`**: Create a new Adopto project under the authenticated DevPass account.
+- **`adopto_list_keys`**: List API keys for an Adopto project.
+- **`adopto_create_key`**: Issue a new project API key (secret) in Adopto.
+- **`adopto_revoke_key`**: Revoke a project API key in Adopto.
+- **`adopto_create_template`**: Create an email template draft in Adopto.
+- **`adopto_get_template`**: Get a template and its draft/versions in Adopto.
+- **`adopto_update_template_draft`**: Update an existing template draft in Adopto.
+- **`adopto_approve_template`**: Approve a template draft to create a sendable immutable version.
+- **`adopto_list_sequences`**: List automated behavioral email flows and active rules in Adopto.
+- **`adopto_get_sequence`**: Get a behavioral flow definition and status in Adopto.
+- **`adopto_create_sequence`**: Create a behavioral email flow draft in Adopto.
+- **`adopto_update_sequence_draft`**: Update a behavioral email flow draft in Adopto.
+- **`adopto_validate_sequence`**: Validate a behavioral email flow draft in Adopto.
+- **`adopto_publish_sequence`**: Publish an Adopto flow draft so it starts processing live events.
+- **`adopto_pause_sequence`**: Pause a published Adopto flow.
+- **`adopto_resume_sequence`**: Resume a paused Adopto flow.
+- **`adopto_sync_user`**: Synchronize a user profile and DevPass ecosystem state into Adopto before or alongside behavioral events.
 - **`adopto_track_event`**: Track user events (e.g. `signup`, `form_submitted`, `payment_completed`) to trigger or halt onboarding campaigns.
-- **`adopto_list_sequences`**: List configured email sequences.
 
 ### RunDeploy (Hosting & Releases)
 
@@ -117,6 +134,9 @@ claude mcp add devpass npx -y @devpass/mcp --env DEVPASS_TOKEN="dp_live_your_act
 - **`rundeploy_verify_domain`**: Verify DNS records and trigger SSL certificate issuance.
 - **`rundeploy_list_env`**: List configured environment variable keys.
 - **`rundeploy_set_env`**: Create or update an encrypted environment variable.
+- **`rundeploy_list_deploy_tokens`**: List project-scoped CI/CD deploy tokens for a RunDeploy project.
+- **`rundeploy_create_deploy_token`**: Create a project-scoped deploy token (`rdp_...`) for CI/CD.
+- **`rundeploy_revoke_deploy_token`**: Revoke a project-scoped deploy token so it can no longer publish deployments.
 
 ### Answero (AI + Telegram Support Chat)
 

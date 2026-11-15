@@ -35,15 +35,48 @@ export function registerSubmitoTools(server: McpServer): void {
           headers["X-Workspace-Id"] = workspaceId;
         }
 
+        let recipientEmail = notify_email;
+        if (!recipientEmail) {
+          const idUrl = process.env.DEVPASS_ID_URL || "https://id.devpass.ru";
+          const meRes = await fetch(`${idUrl}/api/v1/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).catch(() => null);
+          if (meRes?.ok) {
+            const me = (await meRes.json().catch(() => null)) as { email?: string; user?: { email?: string } } | null;
+            recipientEmail = me?.email || me?.user?.email;
+          }
+        }
+
+        if (!recipientEmail) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: "text",
+                text: "notify_email is required (could not resolve account email from DevPass ID).",
+              },
+            ],
+          };
+        }
+
+        const payload: {
+          name: string;
+          enabled: boolean;
+          recipient_email: string;
+          redirect_origins?: string[];
+        } = {
+          name,
+          enabled: true,
+          recipient_email: recipientEmail,
+        };
+        if (redirect_url) {
+          payload.redirect_origins = [new URL(redirect_url).origin];
+        }
+
         const res = await fetch(`${apiUrl}/v1/forms`, {
           method: "POST",
           headers,
-          body: JSON.stringify({
-            name,
-            notify_email,
-            telegram_chat_id,
-            redirect_url,
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
@@ -54,7 +87,9 @@ export function registerSubmitoTools(server: McpServer): void {
           };
         }
 
-        const data = (await res.json()) as { form_id: string; access_key: string; endpoint?: string };
+        const data = (await res.json()) as { form_id?: string; form?: { id?: string }; access_key?: string; endpoint?: string };
+        const formId = data.form_id ?? data.form?.id ?? "";
+        const accessKey = data.access_key ?? "";
         const submitEndpoint = `${apiUrl}/v1/submit`;
         return {
           content: [
@@ -63,10 +98,10 @@ export function registerSubmitoTools(server: McpServer): void {
               text: JSON.stringify(
                 {
                   status: "created",
-                  form_id: data.form_id,
-                  access_key: data.access_key,
+                  form_id: formId,
+                  access_key: accessKey,
                   endpoint_url: submitEndpoint,
-                  quick_start_html: `<form action="${submitEndpoint}" method="POST">\n  <input type="hidden" name="access_key" value="${data.access_key}" />\n  <input type="email" name="email" required placeholder="your@email.com" />\n  <button type="submit">Submit</button>\n</form>`,
+                  quick_start_html: `<form action="${submitEndpoint}" method="POST">\n  <input type="hidden" name="access_key" value="${accessKey}" />\n  <input type="email" name="email" required placeholder="your@email.com" />\n  <button type="submit">Submit</button>\n</form>`,
                 },
                 null,
                 2
@@ -132,6 +167,7 @@ export function registerSubmitoTools(server: McpServer): void {
     async ({ offset = 0 }) => {
       const token = process.env.DEVPASS_TOKEN;
       const apiUrl = process.env.SUBMITO_API_URL || "https://app.submito.ru";
+      const workspaceId = process.env.SUBMITO_WORKSPACE_ID;
 
       if (!token) {
         return {
@@ -141,8 +177,12 @@ export function registerSubmitoTools(server: McpServer): void {
       }
 
       try {
+        const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+        if (workspaceId) {
+          headers["X-Workspace-Id"] = workspaceId;
+        }
         const res = await fetch(`${apiUrl}/v1/forms?offset=${offset}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         });
         if (!res.ok) {
           const errorText = await res.text().catch(() => "");

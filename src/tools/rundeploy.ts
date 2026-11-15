@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { basename } from "node:path";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 function formatJsonResult(data: unknown, isError = false) {
@@ -17,7 +17,7 @@ function formatJsonResult(data: unknown, isError = false) {
 
 async function rundeployRequest(
   path: string,
-  init: { method?: string; body?: unknown; formData?: FormData; timeoutMs?: number } = {}
+  init: { method?: string; body?: unknown; formData?: FormData; timeoutMs?: number } = {},
 ): Promise<ReturnType<typeof formatJsonResult>> {
   const token = process.env.DEVPASS_TOKEN;
   if (!token) {
@@ -26,7 +26,7 @@ async function rundeployRequest(
         error: "DEVPASS_TOKEN is not set",
         hint: "Export DEVPASS_TOKEN=dp_live_... to authenticate with RunDeploy.",
       },
-      true
+      true,
     );
   }
 
@@ -60,7 +60,7 @@ async function rundeployRequest(
         error: "Failed to reach RunDeploy API",
         detail: err instanceof Error ? err.message : String(err),
       },
-      true
+      true,
     );
   }
 }
@@ -73,7 +73,7 @@ export function registerRunDeployTools(server: McpServer): void {
         "List all RunDeploy projects in the authenticated workspace with production URLs, active deployments, and custom domains.",
       inputSchema: {},
     },
-    async () => rundeployRequest("/api/v1/projects")
+    async () => rundeployRequest("/api/v1/projects"),
   );
 
   server.registerTool(
@@ -99,7 +99,7 @@ export function registerRunDeployTools(server: McpServer): void {
           .describe("Project runtime type (default static)"),
       },
     },
-    async (args) => rundeployRequest("/api/v1/projects", { method: "POST", body: args })
+    async (args) => rundeployRequest("/api/v1/projects", { method: "POST", body: args }),
   );
 
   server.registerTool(
@@ -111,7 +111,7 @@ export function registerRunDeployTools(server: McpServer): void {
       },
     },
     async ({ project_id }) =>
-      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deployments`)
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deployments`),
   );
 
   server.registerTool(
@@ -126,7 +126,11 @@ export function registerRunDeployTools(server: McpServer): void {
           .min(1)
           .describe("Absolute or relative path to the local .zip or .tar.gz build archive"),
         commit_sha: z.string().max(64).optional().describe("Optional Git commit SHA"),
-        commit_message: z.string().max(500).optional().describe("Optional release note / commit message"),
+        commit_message: z
+          .string()
+          .max(500)
+          .optional()
+          .describe("Optional release note / commit message"),
       },
     },
     async ({ project_id, archive_path, commit_sha, commit_message }) => {
@@ -143,7 +147,7 @@ export function registerRunDeployTools(server: McpServer): void {
             error: "Failed to read archive file",
             detail: err instanceof Error ? err.message : String(err),
           },
-          true
+          true,
         );
       }
 
@@ -155,15 +159,12 @@ export function registerRunDeployTools(server: McpServer): void {
       if (commit_sha) formData.append("commitSha", commit_sha);
       if (commit_message) formData.append("commitMessage", commit_message);
 
-      return rundeployRequest(
-        `/api/v1/projects/${encodeURIComponent(project_id)}/deployments`,
-        {
-          method: "POST",
-          formData,
-          timeoutMs: 60_000,
-        }
-      );
-    }
+      return rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deployments`, {
+        method: "POST",
+        formData,
+        timeoutMs: 60_000,
+      });
+    },
   );
 
   server.registerTool(
@@ -178,8 +179,8 @@ export function registerRunDeployTools(server: McpServer): void {
     async ({ project_id, deployment_id }) =>
       rundeployRequest(
         `/api/v1/projects/${encodeURIComponent(project_id)}/deployments/${encodeURIComponent(deployment_id)}/rollback`,
-        { method: "POST" }
-      )
+        { method: "POST" },
+      ),
   );
 
   server.registerTool(
@@ -191,7 +192,7 @@ export function registerRunDeployTools(server: McpServer): void {
       },
     },
     async ({ project_id }) =>
-      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/domains`)
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/domains`),
   );
 
   server.registerTool(
@@ -207,7 +208,7 @@ export function registerRunDeployTools(server: McpServer): void {
       rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/domains`, {
         method: "POST",
         body: { domain },
-      })
+      }),
   );
 
   server.registerTool(
@@ -222,20 +223,21 @@ export function registerRunDeployTools(server: McpServer): void {
     async ({ project_id, domain_id }) =>
       rundeployRequest(
         `/api/v1/projects/${encodeURIComponent(project_id)}/domains/${encodeURIComponent(domain_id)}/verify`,
-        { method: "POST" }
-      )
+        { method: "POST" },
+      ),
   );
 
   server.registerTool(
     "rundeploy_list_env",
     {
-      description: "List environment variable keys configured for a RunDeploy project (values are never returned).",
+      description:
+        "List environment variable keys configured for a RunDeploy project (values are never returned).",
       inputSchema: {
         project_id: z.string().min(1).describe("RunDeploy project ID"),
       },
     },
     async ({ project_id }) =>
-      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/env`)
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/env`),
   );
 
   server.registerTool(
@@ -255,7 +257,7 @@ export function registerRunDeployTools(server: McpServer): void {
       rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/env`, {
         method: "POST",
         body: { key, value },
-      })
+      }),
   );
 
   server.registerTool(
@@ -268,7 +270,7 @@ export function registerRunDeployTools(server: McpServer): void {
       },
     },
     async ({ project_id }) =>
-      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens`)
+      rundeployRequest(`/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens`),
   );
 
   server.registerTool(
@@ -295,7 +297,7 @@ export function registerRunDeployTools(server: McpServer): void {
           name,
           ...(expires_in_days !== undefined ? { expiresInDays: expires_in_days } : {}),
         },
-      })
+      }),
   );
 
   server.registerTool(
@@ -310,7 +312,7 @@ export function registerRunDeployTools(server: McpServer): void {
     async ({ project_id, token_id }) =>
       rundeployRequest(
         `/api/v1/projects/${encodeURIComponent(project_id)}/deploy-tokens/${encodeURIComponent(token_id)}`,
-        { method: "DELETE" }
-      )
+        { method: "DELETE" },
+      ),
   );
 }

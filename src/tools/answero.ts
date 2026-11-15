@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 function formatJsonResult(data: unknown, isError = false) {
@@ -15,7 +15,7 @@ function formatJsonResult(data: unknown, isError = false) {
 
 async function answeroRequest(
   path: string,
-  init: { method?: string; body?: unknown } = {}
+  init: { method?: string; body?: unknown } = {},
 ): Promise<{ ok: boolean; data: unknown }> {
   const token = process.env.DEVPASS_TOKEN;
   if (!token) {
@@ -65,7 +65,7 @@ export function registerAnsweroTools(server: McpServer): void {
     async () => {
       const res = await answeroRequest("/api/v1/sites");
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
@@ -88,7 +88,11 @@ export function registerAnsweroTools(server: McpServer): void {
           .regex(/^#[0-9a-fA-F]{6}$/)
           .optional()
           .describe("Widget accent color in #RRGGBB format"),
-        greetingMessage: z.string().max(500).optional().describe("Initial greeting shown in widget"),
+        greetingMessage: z
+          .string()
+          .max(500)
+          .optional()
+          .describe("Initial greeting shown in widget"),
         placeholderText: z.string().max(100).optional().describe("Input placeholder text"),
         position: z
           .enum(["bottom_right", "bottom_left"])
@@ -102,7 +106,7 @@ export function registerAnsweroTools(server: McpServer): void {
     async (args) => {
       const res = await answeroRequest("/api/v1/sites", { method: "POST", body: args });
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
@@ -130,7 +134,7 @@ export function registerAnsweroTools(server: McpServer): void {
           ? `<script src="${baseUrl}/widget.js" data-answero="${siteKey}" defer></script>`
           : null,
       });
-    }
+    },
   );
 
   server.registerTool(
@@ -144,7 +148,7 @@ export function registerAnsweroTools(server: McpServer): void {
     async ({ site_id }) => {
       const res = await answeroRequest(`/api/v1/sites/${encodeURIComponent(site_id)}/knowledge`);
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
@@ -160,7 +164,10 @@ export function registerAnsweroTools(server: McpServer): void {
           .optional()
           .describe("Document type (default faq)"),
         content: z.string().min(1).max(50000).describe("Document text or answer body"),
-        active: z.boolean().optional().describe("Whether document is active in AI context (default true)"),
+        active: z
+          .boolean()
+          .optional()
+          .describe("Whether document is active in AI context (default true)"),
       },
     },
     async ({ site_id, title, type, content, active }) => {
@@ -169,13 +176,14 @@ export function registerAnsweroTools(server: McpServer): void {
         body: { title, type, content, active },
       });
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
     "answero_list_conversations",
     {
-      description: "List support chat conversations across Answero sites, optionally filtered by site or status.",
+      description:
+        "List support chat conversations across Answero sites, optionally filtered by site or status.",
       inputSchema: {
         site_id: z.string().optional().describe("Optional Answero site ID filter"),
         status: z
@@ -191,23 +199,24 @@ export function registerAnsweroTools(server: McpServer): void {
       const query = qs.toString() ? `?${qs.toString()}` : "";
       const res = await answeroRequest(`/api/v1/conversations${query}`);
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
     "answero_get_conversation",
     {
-      description: "Get full conversation details and message history for an Answero support thread.",
+      description:
+        "Get full conversation details and message history for an Answero support thread.",
       inputSchema: {
         conversation_id: z.string().min(1).describe("Conversation ID (e.g. conv_...)"),
       },
     },
     async ({ conversation_id }) => {
       const res = await answeroRequest(
-        `/api/v1/conversations/${encodeURIComponent(conversation_id)}`
+        `/api/v1/conversations/${encodeURIComponent(conversation_id)}`,
       );
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
@@ -223,16 +232,17 @@ export function registerAnsweroTools(server: McpServer): void {
     async ({ conversation_id, content }) => {
       const res = await answeroRequest(
         `/api/v1/conversations/${encodeURIComponent(conversation_id)}/reply`,
-        { method: "POST", body: { content } }
+        { method: "POST", body: { content } },
       );
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 
   server.registerTool(
     "answero_update_conversation_status",
     {
-      description: "Update the status of an Answero conversation (e.g. mark as closed or return to bot).",
+      description:
+        "Update the status of an Answero conversation (e.g. mark as closed or return to bot).",
       inputSchema: {
         conversation_id: z.string().min(1).describe("Conversation ID"),
         status: z
@@ -243,9 +253,9 @@ export function registerAnsweroTools(server: McpServer): void {
     async ({ conversation_id, status }) => {
       const res = await answeroRequest(
         `/api/v1/conversations/${encodeURIComponent(conversation_id)}/status`,
-        { method: "PATCH", body: { status } }
+        { method: "PATCH", body: { status } },
       );
       return formatJsonResult(res.data, !res.ok);
-    }
+    },
   );
 }

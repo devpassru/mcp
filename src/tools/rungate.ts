@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export function registerRunGateTools(server: McpServer): void {
@@ -11,7 +11,9 @@ export function registerRunGateTools(server: McpServer): void {
         model: z
           .string()
           .optional()
-          .describe("Target model name (e.g. 'claude-3-7-sonnet', 'gpt-4o', 'deepseek-v3', 'gemini-2.5-pro')"),
+          .describe(
+            "Target model name (e.g. 'claude-3-7-sonnet', 'gpt-4o', 'deepseek-v3', 'gemini-2.5-pro')",
+          ),
       },
     },
     async ({ model }) => {
@@ -28,7 +30,9 @@ export function registerRunGateTools(server: McpServer): void {
                 service: "RunGate AI Gateway",
                 status: "active",
                 baseUrl: gatewayUrl,
-                apiKey: token.startsWith("dp_live_") ? `${token.slice(0, 10)}...${token.slice(-4)}` : "Set DEVPASS_TOKEN",
+                apiKey: token.startsWith("dp_live_")
+                  ? `${token.slice(0, 10)}...${token.slice(-4)}`
+                  : "Set DEVPASS_TOKEN",
                 recommendedModel: selectedModel,
                 compatibleModels: [
                   "claude-3-7-sonnet",
@@ -47,12 +51,12 @@ export function registerRunGateTools(server: McpServer): void {
                 },
               },
               null,
-              2
+              2,
             ),
           },
         ],
       };
-    }
+    },
   );
 
   server.registerTool(
@@ -109,6 +113,6 @@ export function registerRunGateTools(server: McpServer): void {
           },
         ],
       };
-    }
+    },
   );
 }

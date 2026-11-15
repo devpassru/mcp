@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export interface EntitlementsResponse {
@@ -9,7 +9,15 @@ export interface EntitlementsResponse {
     rungate: { tier: string; dns_devices: number; dns_active: boolean };
     submito: { tier: string; forms_limit: number; submissions_monthly: number };
     runport: { tier: string; max_tunnels: number; bandwidth_bytes: number; rps_limit: number };
-    runping?: { tier: string; monitors_limit: number; min_interval_sec: number; locations: string[]; custom_domains: boolean; status_pages_limit: number; retention_days: number };
+    runping?: {
+      tier: string;
+      monitors_limit: number;
+      min_interval_sec: number;
+      locations: string[];
+      custom_domains: boolean;
+      status_pages_limit: number;
+      retention_days: number;
+    };
     adopto: { tier: string; emails_monthly: number };
     rekuro?: { tier: string };
   };
@@ -22,7 +30,12 @@ export function registerDevPassTools(server: McpServer): void {
       description:
         "Check DevPass account status, active subscription plan, and quotas for all services (RunPort, Submito, RunGate, RunPing, Adopto).",
       inputSchema: {
-        token: z.string().optional().describe("Optional token override. If omitted, uses DEVPASS_TOKEN environment variable."),
+        token: z
+          .string()
+          .optional()
+          .describe(
+            "Optional token override. If omitted, uses DEVPASS_TOKEN environment variable.",
+          ),
       },
     },
     async ({ token }) => {
@@ -66,7 +79,7 @@ export function registerDevPassTools(server: McpServer): void {
                     services: data.services,
                   },
                   null,
-                  2
+                  2,
                 ),
               },
             ],
@@ -93,6 +106,6 @@ export function registerDevPassTools(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 }

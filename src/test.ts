@@ -1,8 +1,8 @@
-import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import test from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "./index.js";
@@ -76,7 +76,7 @@ test("createServer initializes MCP server with expected tools", async () => {
   for (const tool of expectedTools) {
     assert.ok(
       registeredTools.includes(tool),
-      `Expected tool '${tool}' to be registered, registered: ${registeredTools.join(", ")}`
+      `Expected tool '${tool}' to be registered, registered: ${registeredTools.join(", ")}`,
     );
   }
 });
@@ -106,7 +106,8 @@ test("RunPing MCP tools handle missing token and proxy API requests", async () =
 
     const calls: Array<{ url: string; method: string; auth: string | null; body?: unknown }> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       const headers = new Headers(init?.headers);
       calls.push({
         url,
@@ -222,16 +223,22 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
       name: "adopto_list_sequences",
       arguments: {},
     });
-    const presetData = JSON.parse((presetRes.content as Array<{ text: string }>)[0].text);
+    const presetData = JSON.parse((presetRes.content as Array<{ text: string }>)[0]?.text ?? "{}");
     assert.equal(presetData.sequences.length, 8);
 
     // Online API calls with ADOPTO_API_KEY
     process.env.ADOPTO_API_KEY = "adopto_secret_test";
     process.env.ADOPTO_API_URL = "https://api.adopto.example.test/";
 
-    const calls: Array<{ url: string; method: string; auth: string | null; body?: Record<string, unknown> }> = [];
+    const calls: Array<{
+      url: string;
+      method: string;
+      auth: string | null;
+      body?: Record<string, unknown>;
+    }> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       const headers = new Headers(init?.headers);
       calls.push({
         url,
@@ -279,11 +286,11 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
     });
 
     assert.equal(calls.length, 3);
-    assert.equal(calls[0].url, "https://api.adopto.example.test/v1/users/usr_42");
-    assert.equal(calls[0].method, "PUT");
-    assert.equal(calls[0].auth, "Bearer adopto_secret_test");
-    assert.equal(calls[0].body?.profileVersion, 5);
-    assert.equal(calls[0].body?.email, "dev@example.com");
+    assert.equal(calls[0]?.url, "https://api.adopto.example.test/v1/users/usr_42");
+    assert.equal(calls[0]?.method, "PUT");
+    assert.equal(calls[0]?.auth, "Bearer adopto_secret_test");
+    assert.equal(calls[0]?.body?.profileVersion, 5);
+    assert.equal(calls[0]?.body?.email, "dev@example.com");
 
     assert.deepEqual(calls[1], {
       url: "https://api.adopto.example.test/v1/events",
@@ -298,8 +305,8 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
       },
     });
 
-    assert.equal(calls[2].url, "https://api.adopto.example.test/v1/flows");
-    assert.equal(calls[2].method, "GET");
+    assert.equal(calls[2]?.url, "https://api.adopto.example.test/v1/flows");
+    assert.equal(calls[2]?.method, "GET");
 
     // Owner project & key management + template & sequence management
     process.env.DEVPASS_TOKEN = "dp_live_owner_test_token_123456";
@@ -350,20 +357,20 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
     });
 
     assert.equal(calls.length, 10);
-    assert.equal(calls[3].url, "https://api.adopto.example.test/v1/projects");
-    assert.equal(calls[3].auth, "Bearer dp_live_owner_test_token_123456");
-    assert.equal(calls[4].url, "https://api.adopto.example.test/v1/projects");
-    assert.equal(calls[4].method, "POST");
-    assert.equal(calls[5].url, `https://api.adopto.example.test/v1/projects/${projectId}/keys`);
-    assert.equal(calls[5].auth, "Bearer dp_live_owner_test_token_123456");
-    assert.deepEqual(calls[5].body, { scopes: ["events:write", "profiles:write"] });
-    assert.equal(calls[6].url, "https://api.adopto.example.test/v1/templates");
-    assert.equal(calls[6].auth, "Bearer explicit_proj_key");
-    assert.equal(calls[7].url, `https://api.adopto.example.test/v1/templates/${tplId}/versions`);
-    assert.deepEqual(calls[7].body, { expectedRevision: 1 });
-    assert.equal(calls[8].url, "https://api.adopto.example.test/v1/flows");
-    assert.equal(calls[9].url, `https://api.adopto.example.test/v1/flows/${flowId}/publish`);
-    assert.deepEqual(calls[9].body, { expectedDraftVersion: 1 });
+    assert.equal(calls[3]?.url, "https://api.adopto.example.test/v1/projects");
+    assert.equal(calls[3]?.auth, "Bearer dp_live_owner_test_token_123456");
+    assert.equal(calls[4]?.url, "https://api.adopto.example.test/v1/projects");
+    assert.equal(calls[4]?.method, "POST");
+    assert.equal(calls[5]?.url, `https://api.adopto.example.test/v1/projects/${projectId}/keys`);
+    assert.equal(calls[5]?.auth, "Bearer dp_live_owner_test_token_123456");
+    assert.deepEqual(calls[5]?.body, { scopes: ["events:write", "profiles:write"] });
+    assert.equal(calls[6]?.url, "https://api.adopto.example.test/v1/templates");
+    assert.equal(calls[6]?.auth, "Bearer explicit_proj_key");
+    assert.equal(calls[7]?.url, `https://api.adopto.example.test/v1/templates/${tplId}/versions`);
+    assert.deepEqual(calls[7]?.body, { expectedRevision: 1 });
+    assert.equal(calls[8]?.url, "https://api.adopto.example.test/v1/flows");
+    assert.equal(calls[9]?.url, `https://api.adopto.example.test/v1/flows/${flowId}/publish`);
+    assert.deepEqual(calls[9]?.body, { expectedDraftVersion: 1 });
   } finally {
     globalThis.fetch = origFetch;
     if (origToken === undefined) delete process.env.DEVPASS_TOKEN;
@@ -411,7 +418,8 @@ test("RunDeploy MCP tools handle missing token, JSON endpoints, and archive uplo
     }> = [];
 
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       const headers = new Headers(init?.headers);
       const isFormData = init?.body instanceof FormData;
       calls.push({
@@ -471,35 +479,35 @@ test("RunDeploy MCP tools handle missing token, JSON endpoints, and archive uplo
     });
 
     assert.equal(calls.length, 10);
-    assert.equal(calls[0].url, "https://rundeploy.example.test/api/v1/projects");
-    assert.equal(calls[0].method, "GET");
-    assert.equal(calls[1].url, "https://rundeploy.example.test/api/v1/projects");
-    assert.equal(calls[1].method, "POST");
-    assert.deepEqual(calls[1].body, {
+    assert.equal(calls[0]?.url, "https://rundeploy.example.test/api/v1/projects");
+    assert.equal(calls[0]?.method, "GET");
+    assert.equal(calls[1]?.url, "https://rundeploy.example.test/api/v1/projects");
+    assert.equal(calls[1]?.method, "POST");
+    assert.deepEqual(calls[1]?.body, {
       name: "My App",
       slug: "my-app",
       spaFallback: true,
       type: "static",
     });
-    assert.equal(calls[2].url, "https://rundeploy.example.test/api/v1/projects/prj_1/deployments");
-    assert.equal(calls[3].url, "https://rundeploy.example.test/api/v1/projects/prj_1/deployments");
-    assert.equal(calls[3].method, "POST");
-    assert.equal(calls[3].isFormData, true);
+    assert.equal(calls[2]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/deployments");
+    assert.equal(calls[3]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/deployments");
+    assert.equal(calls[3]?.method, "POST");
+    assert.equal(calls[3]?.isFormData, true);
     assert.equal(
-      calls[4].url,
-      "https://rundeploy.example.test/api/v1/projects/prj_1/deployments/dep_1/rollback"
+      calls[4]?.url,
+      "https://rundeploy.example.test/api/v1/projects/prj_1/deployments/dep_1/rollback",
     );
-    assert.equal(calls[4].method, "POST");
-    assert.equal(calls[5].url, "https://rundeploy.example.test/api/v1/projects/prj_1/domains");
-    assert.equal(calls[6].url, "https://rundeploy.example.test/api/v1/projects/prj_1/domains");
-    assert.deepEqual(calls[6].body, { domain: "app.example.com" });
+    assert.equal(calls[4]?.method, "POST");
+    assert.equal(calls[5]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/domains");
+    assert.equal(calls[6]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/domains");
+    assert.deepEqual(calls[6]?.body, { domain: "app.example.com" });
     assert.equal(
-      calls[7].url,
-      "https://rundeploy.example.test/api/v1/projects/prj_1/domains/dom_1/verify"
+      calls[7]?.url,
+      "https://rundeploy.example.test/api/v1/projects/prj_1/domains/dom_1/verify",
     );
-    assert.equal(calls[8].url, "https://rundeploy.example.test/api/v1/projects/prj_1/env");
-    assert.equal(calls[9].url, "https://rundeploy.example.test/api/v1/projects/prj_1/env");
-    assert.deepEqual(calls[9].body, { key: "API_KEY", value: "secret" });
+    assert.equal(calls[8]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/env");
+    assert.equal(calls[9]?.url, "https://rundeploy.example.test/api/v1/projects/prj_1/env");
+    assert.deepEqual(calls[9]?.body, { key: "API_KEY", value: "secret" });
   } finally {
     globalThis.fetch = origFetch;
     await rm(tempDir, { recursive: true, force: true });
@@ -536,7 +544,8 @@ test("Answero MCP tools handle missing token, site/knowledge/conversation APIs, 
 
     const calls: Array<{ url: string; method: string; auth: string | null; body?: unknown }> = [];
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       const headers = new Headers(init?.headers);
       calls.push({
         url,
@@ -548,7 +557,7 @@ test("Answero MCP tools handle missing token, site/knowledge/conversation APIs, 
       if (url.endsWith("/api/v1/sites/site_1")) {
         return new Response(
           JSON.stringify({ site: { id: "site_1", name: "Docs", siteKey: "ans_key_123" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
+          { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
 
@@ -567,10 +576,12 @@ test("Answero MCP tools handle missing token, site/knowledge/conversation APIs, 
       name: "answero_get_widget_snippet",
       arguments: { site_id: "site_1" },
     });
-    const snippetData = JSON.parse((snippetRes.content as Array<{ text: string }>)[0].text);
+    const snippetData = JSON.parse(
+      (snippetRes.content as Array<{ text: string }>)[0]?.text ?? "{}",
+    );
     assert.equal(
       snippetData.snippet,
-      '<script src="https://answero.example.test/widget.js" data-answero="ans_key_123" defer></script>'
+      '<script src="https://answero.example.test/widget.js" data-answero="ans_key_123" defer></script>',
     );
 
     await client.callTool({
@@ -599,24 +610,24 @@ test("Answero MCP tools handle missing token, site/knowledge/conversation APIs, 
     });
 
     assert.equal(calls.length, 9);
-    assert.equal(calls[0].url, "https://answero.example.test/api/v1/sites");
-    assert.equal(calls[1].url, "https://answero.example.test/api/v1/sites");
-    assert.equal(calls[1].method, "POST");
-    assert.equal(calls[2].url, "https://answero.example.test/api/v1/sites/site_1");
-    assert.equal(calls[3].url, "https://answero.example.test/api/v1/sites/site_1/knowledge");
-    assert.equal(calls[4].url, "https://answero.example.test/api/v1/sites/site_1/knowledge");
-    assert.equal(calls[4].method, "POST");
+    assert.equal(calls[0]?.url, "https://answero.example.test/api/v1/sites");
+    assert.equal(calls[1]?.url, "https://answero.example.test/api/v1/sites");
+    assert.equal(calls[1]?.method, "POST");
+    assert.equal(calls[2]?.url, "https://answero.example.test/api/v1/sites/site_1");
+    assert.equal(calls[3]?.url, "https://answero.example.test/api/v1/sites/site_1/knowledge");
+    assert.equal(calls[4]?.url, "https://answero.example.test/api/v1/sites/site_1/knowledge");
+    assert.equal(calls[4]?.method, "POST");
     assert.equal(
-      calls[5].url,
-      "https://answero.example.test/api/v1/conversations?siteId=site_1&status=waiting_operator"
+      calls[5]?.url,
+      "https://answero.example.test/api/v1/conversations?siteId=site_1&status=waiting_operator",
     );
-    assert.equal(calls[6].url, "https://answero.example.test/api/v1/conversations/conv_1");
-    assert.equal(calls[7].url, "https://answero.example.test/api/v1/conversations/conv_1/reply");
-    assert.equal(calls[7].method, "POST");
-    assert.deepEqual(calls[7].body, { content: "Hello from operator" });
-    assert.equal(calls[8].url, "https://answero.example.test/api/v1/conversations/conv_1/status");
-    assert.equal(calls[8].method, "PATCH");
-    assert.deepEqual(calls[8].body, { status: "closed" });
+    assert.equal(calls[6]?.url, "https://answero.example.test/api/v1/conversations/conv_1");
+    assert.equal(calls[7]?.url, "https://answero.example.test/api/v1/conversations/conv_1/reply");
+    assert.equal(calls[7]?.method, "POST");
+    assert.deepEqual(calls[7]?.body, { content: "Hello from operator" });
+    assert.equal(calls[8]?.url, "https://answero.example.test/api/v1/conversations/conv_1/status");
+    assert.equal(calls[8]?.method, "PATCH");
+    assert.deepEqual(calls[8]?.body, { status: "closed" });
   } finally {
     globalThis.fetch = origFetch;
     if (origToken === undefined) delete process.env.DEVPASS_TOKEN;

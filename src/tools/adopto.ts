@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export const DEVPASS_DEFAULT_SEQUENCES = [
@@ -168,7 +168,8 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_list_projects",
     {
-      description: "List all Adopto projects owned by the authenticated DevPass account (GET /v1/projects).",
+      description:
+        "List all Adopto projects owned by the authenticated DevPass account (GET /v1/projects).",
       inputSchema: {},
     },
     async () => {
@@ -183,15 +184,32 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_create_project",
     {
-      description: "Create a new Adopto project under the authenticated DevPass account (POST /v1/projects).",
+      description:
+        "Create a new Adopto project under the authenticated DevPass account (POST /v1/projects).",
       inputSchema: {
         name: z.string().min(1).max(120).describe("Project display name (e.g. 'RunGate')"),
         url: z.string().url().describe("Project website URL (e.g. 'https://rungate.ru')"),
-        language: z.string().min(2).max(16).optional().describe("BCP-47 language tag (default: 'ru')"),
+        language: z
+          .string()
+          .min(2)
+          .max(16)
+          .optional()
+          .describe("BCP-47 language tag (default: 'ru')"),
         timezone: z.string().min(1).optional().describe("IANA timezone (default: 'Europe/Moscow')"),
-        reply_to: z.string().email().nullable().optional().describe("Optional reply-to email address"),
-        first_result: z.string().min(1).describe("Product card: first value/result user should achieve"),
-        purchase_signal: z.string().min(1).describe("Product card: signal indicating purchase readiness"),
+        reply_to: z
+          .string()
+          .email()
+          .nullable()
+          .optional()
+          .describe("Optional reply-to email address"),
+        first_result: z
+          .string()
+          .min(1)
+          .describe("Product card: first value/result user should achieve"),
+        purchase_signal: z
+          .string()
+          .min(1)
+          .describe("Product card: signal indicating purchase readiness"),
         constraints: z.string().optional().describe("Product card: optional messaging constraints"),
         idempotency_key: z.string().uuid().optional().describe("Optional UUID idempotency key"),
       },
@@ -240,8 +258,16 @@ export function registerAdoptoTools(server: McpServer): void {
       description:
         "List API keys for an Adopto project. Pass project_id with DEVPASS_TOKEN, or omit project_id to use ADOPTO_API_KEY.",
       inputSchema: {
-        project_id: z.string().uuid().optional().describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ project_id, api_key }) => {
@@ -266,12 +292,20 @@ export function registerAdoptoTools(server: McpServer): void {
       description:
         "Issue a new project API key (secret) in Adopto. Pass project_id with DEVPASS_TOKEN to bootstrap the first key, or omit project_id to issue using ADOPTO_API_KEY.",
       inputSchema: {
-        project_id: z.string().uuid().optional().describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
         scopes: z
           .array(z.string().min(1))
           .optional()
           .describe("Requested key scopes (defaults to full automation + events + flows scopes)"),
-        api_key: z.string().min(1).optional().describe("Optional existing project API key with keys:manage scope"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional existing project API key with keys:manage scope"),
       },
     },
     async ({ project_id, scopes, api_key }) => {
@@ -305,8 +339,16 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Revoke a project API key in Adopto.",
       inputSchema: {
         key_id: z.string().uuid().describe("API key UUID to revoke"),
-        project_id: z.string().uuid().optional().describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
-        api_key: z.string().min(1).optional().describe("Optional project API key with keys:manage scope"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Project UUID (uses DEVPASS_TOKEN when provided)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key with keys:manage scope"),
       },
     },
     async ({ key_id, project_id, api_key }) => {
@@ -337,14 +379,36 @@ export function registerAdoptoTools(server: McpServer): void {
         name: z.string().min(1).max(128).describe("Internal template name"),
         subject: z.string().min(1).describe("Email subject"),
         primary_url: z.string().url().describe("Primary CTA URL used in the template"),
-        sender_mode: z.enum(["project", "custom"]).optional().describe("Sender mode (default: 'project')"),
-        text: z.string().min(1).describe("Plain-text email body (must include {{unsubscribeUrl}} if marketing)"),
+        sender_mode: z
+          .enum(["project", "custom"])
+          .optional()
+          .describe("Sender mode (default: 'project')"),
+        text: z
+          .string()
+          .min(1)
+          .describe("Plain-text email body (must include {{unsubscribeUrl}} if marketing)"),
         html: z.string().min(1).describe("HTML email body"),
-        variables: z.record(z.unknown()).optional().describe("Template variable definitions"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        variables: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("Template variable definitions"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
-    async ({ name, subject, primary_url, sender_mode = "project", text, html, variables, api_key }) => {
+    async ({
+      name,
+      subject,
+      primary_url,
+      sender_mode = "project",
+      text,
+      html,
+      variables,
+      api_key,
+    }) => {
       return adoptoRequest(
         "/v1/templates",
         getAdoptoProjectToken(api_key),
@@ -373,7 +437,11 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Get a template and its draft/versions in Adopto (GET /v1/templates/:id).",
       inputSchema: {
         template_id: z.string().uuid().describe("Template UUID"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ template_id, api_key }) => {
@@ -394,11 +462,21 @@ export function registerAdoptoTools(server: McpServer): void {
         expected_revision: z.number().int().positive().describe("Current draft revision number"),
         subject: z.string().min(1).describe("Email subject"),
         primary_url: z.string().url().describe("Primary CTA URL"),
-        sender_mode: z.enum(["project", "custom"]).optional().describe("Sender mode (default: 'project')"),
+        sender_mode: z
+          .enum(["project", "custom"])
+          .optional()
+          .describe("Sender mode (default: 'project')"),
         text: z.string().min(1).describe("Plain-text email body"),
         html: z.string().min(1).describe("HTML email body"),
-        variables: z.record(z.unknown()).optional().describe("Template variable definitions"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        variables: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("Template variable definitions"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({
@@ -437,11 +515,21 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_approve_template",
     {
-      description: "Approve a template draft to create a sendable immutable version (POST /v1/templates/:id/versions).",
+      description:
+        "Approve a template draft to create a sendable immutable version (POST /v1/templates/:id/versions).",
       inputSchema: {
         template_id: z.string().uuid().describe("Template UUID"),
-        expected_revision: z.number().int().positive().optional().describe("Expected draft revision (default: 1)"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        expected_revision: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Expected draft revision (default: 1)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ template_id, expected_revision = 1, api_key }) => {
@@ -462,9 +550,14 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_list_sequences",
     {
-      description: "List automated behavioral email flows and active rules in Adopto (GET /v1/flows).",
+      description:
+        "List automated behavioral email flows and active rules in Adopto (GET /v1/flows).",
       inputSchema: {
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ api_key }) => {
@@ -510,7 +603,11 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Get a behavioral flow definition and status in Adopto (GET /v1/flows/:id).",
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, api_key }) => {
@@ -528,11 +625,15 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Create a behavioral email flow draft in Adopto (POST /v1/flows).",
       inputSchema: {
         definition: z
-          .record(z.unknown())
+          .record(z.string(), z.unknown())
           .describe(
             "Flow definition ({ schemaVersion: 1, name, entry: { eventName, conditions }, exit: { eventNames, conditions }, goal: { eventName }, steps })",
           ),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ definition, api_key }) => {
@@ -555,8 +656,12 @@ export function registerAdoptoTools(server: McpServer): void {
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
         expected_draft_version: z.number().int().positive().describe("Current draft version"),
-        definition: z.record(z.unknown()).describe("Updated flow definition"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        definition: z.record(z.string(), z.unknown()).describe("Updated flow definition"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, expected_draft_version, definition, api_key }) => {
@@ -575,11 +680,21 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_validate_sequence",
     {
-      description: "Validate a behavioral email flow draft in Adopto (POST /v1/flows/:id/validate).",
+      description:
+        "Validate a behavioral email flow draft in Adopto (POST /v1/flows/:id/validate).",
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
-        expected_draft_version: z.number().int().positive().optional().describe("Expected draft version (default: 1)"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        expected_draft_version: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Expected draft version (default: 1)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, expected_draft_version = 1, api_key }) => {
@@ -598,11 +713,21 @@ export function registerAdoptoTools(server: McpServer): void {
   server.registerTool(
     "adopto_publish_sequence",
     {
-      description: "Publish an Adopto flow draft so it starts processing live events (POST /v1/flows/:id/publish).",
+      description:
+        "Publish an Adopto flow draft so it starts processing live events (POST /v1/flows/:id/publish).",
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
-        expected_draft_version: z.number().int().positive().optional().describe("Expected draft version (default: 1)"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        expected_draft_version: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Expected draft version (default: 1)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, expected_draft_version = 1, api_key }) => {
@@ -624,7 +749,11 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Pause a published Adopto flow (POST /v1/flows/:id/pause).",
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, api_key }) => {
@@ -643,7 +772,11 @@ export function registerAdoptoTools(server: McpServer): void {
       description: "Resume a paused Adopto flow (POST /v1/flows/:id/resume).",
       inputSchema: {
         flow_id: z.string().uuid().describe("Flow UUID"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ flow_id, api_key }) => {
@@ -673,12 +806,16 @@ export function registerAdoptoTools(server: McpServer): void {
           .optional()
           .describe("Monotonic profile version (defaults to current unix timestamp in seconds)"),
         properties: z
-          .record(z.unknown())
+          .record(z.string(), z.unknown())
           .optional()
           .describe(
             "Ecosystem profile attributes (e.g. { userName, signupSource: 'runping'|'rungate'|'devpass', plan: 'free'|'single_pro'|'devpass_pro', runpingActivated, rungateActivated, anyProductActivated, multiProductActive, mcpConnected })",
           ),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
     async ({ user_id, email, profile_version, properties = {}, api_key }) => {
@@ -748,20 +885,47 @@ export function registerAdoptoTools(server: McpServer): void {
         "Track a behavioral user event in Adopto (POST /v1/events) to trigger onboarding, cross-sell, or upgrade flows, or record a conversion goal.",
       inputSchema: {
         user_id: z.string().min(1).optional().describe("Stable user ID from id.devpass.ru"),
-        user_email: z.string().email().optional().describe("Fallback identifier if user_id is unavailable"),
-        event_id: z.string().min(1).optional().describe("Idempotency event ID (defaults to random UUID)"),
+        user_email: z
+          .string()
+          .email()
+          .optional()
+          .describe("Fallback identifier if user_id is unavailable"),
+        event_id: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Idempotency event ID (defaults to random UUID)"),
         event_name: z
           .string()
           .min(1)
           .describe(
             "Event name (e.g. 'user.registered', 'rungate.trial_activated', 'rungate.first_activity', 'runping.first_monitor_active', 'subscription.paid')",
           ),
-        occurred_at: z.string().datetime().optional().describe("ISO-8601 timestamp (defaults to now)"),
-        properties: z.record(z.unknown()).optional().describe("Optional event metadata payload"),
-        api_key: z.string().min(1).optional().describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+        occurred_at: z
+          .string()
+          .datetime()
+          .optional()
+          .describe("ISO-8601 timestamp (defaults to now)"),
+        properties: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("Optional event metadata payload"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
-    async ({ user_id, user_email, event_id, event_name, occurred_at, properties = {}, api_key }) => {
+    async ({
+      user_id,
+      user_email,
+      event_id,
+      event_name,
+      occurred_at,
+      properties = {},
+      api_key,
+    }) => {
       const resolvedUserId = user_id || user_email;
       if (!resolvedUserId) {
         return formatJsonResult({ error: "Either user_id or user_email must be provided" }, true);

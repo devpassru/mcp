@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 function formatJsonResult(data: unknown, isError = false) {
@@ -15,7 +15,7 @@ function formatJsonResult(data: unknown, isError = false) {
 
 async function runpingRequest(
   path: string,
-  init: { method?: string; body?: unknown } = {}
+  init: { method?: string; body?: unknown } = {},
 ): Promise<ReturnType<typeof formatJsonResult>> {
   const token = process.env.DEVPASS_TOKEN;
   if (!token) {
@@ -24,7 +24,7 @@ async function runpingRequest(
         error: "DEVPASS_TOKEN is not set",
         hint: "Export DEVPASS_TOKEN=dp_live_... to authenticate with RunPing.",
       },
-      true
+      true,
     );
   }
 
@@ -49,7 +49,7 @@ async function runpingRequest(
         error: "Failed to reach RunPing API",
         detail: err instanceof Error ? err.message : String(err),
       },
-      true
+      true,
     );
   }
 }
@@ -77,7 +77,7 @@ export function registerRunPingTools(server: McpServer): void {
       if (search) qs.set("search", search);
       const query = qs.toString() ? `?${qs.toString()}` : "";
       return runpingRequest(`/api/v1/monitors${query}`);
-    }
+    },
   );
 
   server.registerTool(
@@ -87,10 +87,7 @@ export function registerRunPingTools(server: McpServer): void {
         "Create a new RunPing HTTP(S), Keyword, JSON, or TCP port monitor with SSRF protection and DevPass tier checks.",
       inputSchema: {
         name: z.string().min(1).describe("Display name of the monitor"),
-        target_url: z
-          .string()
-          .min(1)
-          .describe("Public HTTPS/HTTP URL or host:port (for tcp)"),
+        target_url: z.string().min(1).describe("Public HTTPS/HTTP URL or host:port (for tcp)"),
         type: z
           .enum(["http", "keyword", "json", "tcp"])
           .optional()
@@ -119,7 +116,7 @@ export function registerRunPingTools(server: McpServer): void {
           .describe("Whether keyword/JSON expression must exist"),
       },
     },
-    async (args) => runpingRequest("/api/v1/monitors", { method: "POST", body: args })
+    async (args) => runpingRequest("/api/v1/monitors", { method: "POST", body: args }),
   );
 
   server.registerTool(
@@ -140,7 +137,7 @@ export function registerRunPingTools(server: McpServer): void {
       if (limit !== undefined) qs.set("limit", String(limit));
       const query = qs.toString() ? `?${qs.toString()}` : "";
       return runpingRequest(`/api/v1/incidents${query}`);
-    }
+    },
   );
 
   server.registerTool(
@@ -154,7 +151,7 @@ export function registerRunPingTools(server: McpServer): void {
     async ({ monitor_id }) =>
       runpingRequest(`/api/v1/monitors/${encodeURIComponent(monitor_id)}/pause`, {
         method: "POST",
-      })
+      }),
   );
 
   server.registerTool(
@@ -168,7 +165,7 @@ export function registerRunPingTools(server: McpServer): void {
     async ({ monitor_id }) =>
       runpingRequest(`/api/v1/monitors/${encodeURIComponent(monitor_id)}/resume`, {
         method: "POST",
-      })
+      }),
   );
 
   server.registerTool(
@@ -196,6 +193,6 @@ export function registerRunPingTools(server: McpServer): void {
           is_public: is_public ?? true,
           monitors_config: (monitor_ids ?? []).map((monitor_id) => ({ monitor_id })),
         },
-      })
+      }),
   );
 }

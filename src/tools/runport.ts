@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { spawn, ChildProcess } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export const activeTunnels = new Map<string, ChildProcess>();
@@ -15,10 +15,16 @@ export function registerRunPortTools(server: McpServer): void {
         port: z.number().int().min(1).max(65535).describe("Local port to expose (e.g. 3000)"),
         subdomain: z
           .string()
-          .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format: must be 1-63 alphanumeric chars or hyphens, starting with alphanumeric")
+          .regex(
+            /^[a-z0-9][a-z0-9-]{0,62}$/i,
+            "Invalid subdomain format: must be 1-63 alphanumeric chars or hyphens, starting with alphanumeric",
+          )
           .optional()
           .describe("Requested subdomain (e.g. 'my-app'). Random if omitted."),
-        review: z.boolean().optional().describe("Enable interactive visual feedback and client review mode on the tunnel."),
+        review: z
+          .boolean()
+          .optional()
+          .describe("Enable interactive visual feedback and client review mode on the tunnel."),
       },
     },
     async ({ port, subdomain: requestedSubdomain, review }) => {
@@ -29,10 +35,14 @@ export function registerRunPortTools(server: McpServer): void {
 
       return new Promise((resolve) => {
         const args = [
-          "-p", remotePort,
-          "-R", `${remoteBind}:localhost:${port}`,
-          "-o", "StrictHostKeyChecking=no",
-          "-o", "UserKnownHostsFile=/dev/null",
+          "-p",
+          remotePort,
+          "-R",
+          `${remoteBind}:localhost:${port}`,
+          "-o",
+          "StrictHostKeyChecking=no",
+          "-o",
+          "UserKnownHostsFile=/dev/null",
           "-T",
           remoteHost,
         ];
@@ -66,7 +76,9 @@ export function registerRunPortTools(server: McpServer): void {
                       `RunPort tunnel active!\n` +
                       `URL: https://${subdomain}.${domain}\n` +
                       `Local Port: ${port}\n` +
-                      (review ? `Review Mode: Enabled (clients can leave visual annotations)\n` : "") +
+                      (review
+                        ? `Review Mode: Enabled (clients can leave visual annotations)\n`
+                        : "") +
                       `Inspect logs with: runport_get_logs`,
                   },
                 ],
@@ -121,7 +133,7 @@ export function registerRunPortTools(server: McpServer): void {
           }
         }, 5000);
       });
-    }
+    },
   );
 
   server.registerTool(
@@ -146,13 +158,14 @@ export function registerRunPortTools(server: McpServer): void {
         content: [{ type: "text", text: `No active tunnel found for subdomain '${subdomain}'.` }],
         isError: true,
       };
-    }
+    },
   );
 
   server.registerTool(
     "runport_get_logs",
     {
-      description: "Get recent HTTP access logs for an active RunPort tunnel (useful for webhook and API debugging).",
+      description:
+        "Get recent HTTP access logs for an active RunPort tunnel (useful for webhook and API debugging).",
       inputSchema: {
         subdomain: z.string().describe("Subdomain of the active tunnel"),
       },
@@ -161,26 +174,32 @@ export function registerRunPortTools(server: McpServer): void {
       const logs = tunnelLogs.get(subdomain);
       if (!logs || logs.length === 0) {
         return {
-          content: [{ type: "text", text: `No traffic logs recorded yet for tunnel '${subdomain}'.` }],
+          content: [
+            { type: "text", text: `No traffic logs recorded yet for tunnel '${subdomain}'.` },
+          ],
         };
       }
       return {
         content: [{ type: "text", text: logs.join("\n") }],
       };
-    }
+    },
   );
 
   server.registerTool(
     "runport_list_reviews",
     {
-      description: "List visual feedback, annotations, and client review comments left on the preview tunnel.",
+      description:
+        "List visual feedback, annotations, and client review comments left on the preview tunnel.",
       inputSchema: {
         subdomain: z
           .string()
           .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format")
           .describe("Subdomain of the tunnel"),
         path: z.string().optional().describe("Filter comments by URL path (e.g. '/pricing')"),
-        status: z.enum(["open", "resolved", "all"]).optional().describe("Filter status: 'open', 'resolved', or 'all'. Defaults to 'open'."),
+        status: z
+          .enum(["open", "resolved", "all"])
+          .optional()
+          .describe("Filter status: 'open', 'resolved', or 'all'. Defaults to 'open'."),
       },
     },
     async ({ subdomain, path, status = "open" }) => {
@@ -213,7 +232,9 @@ export function registerRunPortTools(server: McpServer): void {
 
         if (!reviews || reviews.length === 0) {
           return {
-            content: [{ type: "text", text: `No ${status} review comments found for '${subdomain}'.` }],
+            content: [
+              { type: "text", text: `No ${status} review comments found for '${subdomain}'.` },
+            ],
           };
         }
 
@@ -228,16 +249,23 @@ export function registerRunPortTools(server: McpServer): void {
           .join("\n\n");
 
         return {
-          content: [{ type: "text", text: `Found ${reviews.length} review comment(s) for '${subdomain}':\n\n${formatted}` }],
+          content: [
+            {
+              type: "text",
+              text: `Found ${reviews.length} review comment(s) for '${subdomain}':\n\n${formatted}`,
+            },
+          ],
         };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         return {
-          content: [{ type: "text", text: `Could not retrieve reviews for '${subdomain}': ${msg}` }],
+          content: [
+            { type: "text", text: `Could not retrieve reviews for '${subdomain}': ${msg}` },
+          ],
           isError: true,
         };
       }
-    }
+    },
   );
 
   server.registerTool(
@@ -273,6 +301,6 @@ export function registerRunPortTools(server: McpServer): void {
           isError: true,
         };
       }
-    }
+    },
   );
 }

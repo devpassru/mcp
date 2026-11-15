@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export function registerSubmitoTools(server: McpServer): void {
@@ -9,9 +9,20 @@ export function registerSubmitoTools(server: McpServer): void {
         "Create a new form endpoint in Submito for lead generation, waitlists, or feedback without writing custom backend code.",
       inputSchema: {
         name: z.string().describe("Form name (e.g. 'Waitlist', 'Contact Us', 'Bug Report')"),
-        notify_email: z.string().email().optional().describe("Owner email address to receive submission notifications"),
-        telegram_chat_id: z.string().optional().describe("Telegram Chat ID for real-time lead alerts"),
-        redirect_url: z.string().url().optional().describe("Redirect URL for user after successful form submission"),
+        notify_email: z
+          .string()
+          .email()
+          .optional()
+          .describe("Owner email address to receive submission notifications"),
+        telegram_chat_id: z
+          .string()
+          .optional()
+          .describe("Telegram Chat ID for real-time lead alerts"),
+        redirect_url: z
+          .string()
+          .url()
+          .optional()
+          .describe("Redirect URL for user after successful form submission"),
       },
     },
     async ({ name, notify_email, telegram_chat_id, redirect_url }) => {
@@ -22,7 +33,9 @@ export function registerSubmitoTools(server: McpServer): void {
       if (!token) {
         return {
           isError: true,
-          content: [{ type: "text", text: "DEVPASS_TOKEN is required to create a form in Submito." }],
+          content: [
+            { type: "text", text: "DEVPASS_TOKEN is required to create a form in Submito." },
+          ],
         };
       }
 
@@ -42,7 +55,10 @@ export function registerSubmitoTools(server: McpServer): void {
             headers: { Authorization: `Bearer ${token}` },
           }).catch(() => null);
           if (meRes?.ok) {
-            const me = (await meRes.json().catch(() => null)) as { email?: string; user?: { email?: string } } | null;
+            const me = (await meRes.json().catch(() => null)) as {
+              email?: string;
+              user?: { email?: string };
+            } | null;
             recipientEmail = me?.email || me?.user?.email;
           }
         }
@@ -87,7 +103,12 @@ export function registerSubmitoTools(server: McpServer): void {
           };
         }
 
-        const data = (await res.json()) as { form_id?: string; form?: { id?: string }; access_key?: string; endpoint?: string };
+        const data = (await res.json()) as {
+          form_id?: string;
+          form?: { id?: string };
+          access_key?: string;
+          endpoint?: string;
+        };
         const formId = data.form_id ?? data.form?.id ?? "";
         const accessKey = data.access_key ?? "";
         const submitEndpoint = `${apiUrl}/v1/submit`;
@@ -104,7 +125,7 @@ export function registerSubmitoTools(server: McpServer): void {
                   quick_start_html: `<form action="${submitEndpoint}" method="POST">\n  <input type="hidden" name="access_key" value="${accessKey}" />\n  <input type="email" name="email" required placeholder="your@email.com" />\n  <button type="submit">Submit</button>\n</form>`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
@@ -120,13 +141,14 @@ export function registerSubmitoTools(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 
   server.registerTool(
     "submito_get_snippet",
     {
-      description: "Get copy-paste integration snippet for a Submito form in HTML, React, or Astro.",
+      description:
+        "Get copy-paste integration snippet for a Submito form in HTML, React, or Astro.",
       inputSchema: {
         access_key: z.string().describe("Submito form access_key or public identifier"),
         framework: z.enum(["html", "react", "astro"]).describe("Frontend framework/format"),
@@ -153,7 +175,7 @@ export function registerSubmitoTools(server: McpServer): void {
           },
         ],
       };
-    }
+    },
   );
 
   server.registerTool(
@@ -206,6 +228,6 @@ export function registerSubmitoTools(server: McpServer): void {
           ],
         };
       }
-    }
+    },
   );
 }

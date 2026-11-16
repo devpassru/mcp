@@ -387,7 +387,24 @@ export function registerAdoptoTools(server: McpServer): void {
           .string()
           .min(1)
           .describe("Plain-text email body (must include {{unsubscribeUrl}} if marketing)"),
-        html: z.string().min(1).describe("HTML email body"),
+        html: z.string().min(1).nullable().describe("HTML email body (or null)"),
+        layout: z
+          .enum(["none", "master", "clean", "card", "newsletter", "founder"])
+          .optional()
+          .describe("Email layout wrapper (default: 'master')"),
+        accent_color: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .optional()
+          .describe("Optional accent hex color (#RRGGBB)"),
+        cta_label: z.string().min(1).max(80).nullable().optional().describe("Optional CTA button text"),
+        preheader: z
+          .string()
+          .min(1)
+          .max(160)
+          .nullable()
+          .optional()
+          .describe("Optional inbox preview preheader text"),
         variables: z
           .record(z.string(), z.unknown())
           .optional()
@@ -406,6 +423,10 @@ export function registerAdoptoTools(server: McpServer): void {
       sender_mode = "project",
       text,
       html,
+      layout = "master",
+      accent_color,
+      cta_label,
+      preheader,
       variables,
       api_key,
     }) => {
@@ -421,6 +442,10 @@ export function registerAdoptoTools(server: McpServer): void {
               subject,
               primaryUrl: primary_url,
               senderMode: sender_mode,
+              layout,
+              ...(accent_color !== undefined ? { accentColor: accent_color } : {}),
+              ...(cta_label !== undefined ? { ctaLabel: cta_label } : {}),
+              ...(preheader !== undefined ? { preheader } : {}),
               ...(variables !== undefined ? { variables } : {}),
               text,
               html,
@@ -467,7 +492,24 @@ export function registerAdoptoTools(server: McpServer): void {
           .optional()
           .describe("Sender mode (default: 'project')"),
         text: z.string().min(1).describe("Plain-text email body"),
-        html: z.string().min(1).describe("HTML email body"),
+        html: z.string().min(1).nullable().describe("HTML email body (or null)"),
+        layout: z
+          .enum(["none", "master", "clean", "card", "newsletter", "founder"])
+          .optional()
+          .describe("Email layout wrapper"),
+        accent_color: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .optional()
+          .describe("Optional accent hex color (#RRGGBB)"),
+        cta_label: z.string().min(1).max(80).nullable().optional().describe("Optional CTA button text"),
+        preheader: z
+          .string()
+          .min(1)
+          .max(160)
+          .nullable()
+          .optional()
+          .describe("Optional inbox preview preheader text"),
         variables: z
           .record(z.string(), z.unknown())
           .optional()
@@ -487,6 +529,10 @@ export function registerAdoptoTools(server: McpServer): void {
       sender_mode = "project",
       text,
       html,
+      layout,
+      accent_color,
+      cta_label,
+      preheader,
       variables,
       api_key,
     }) => {
@@ -502,10 +548,181 @@ export function registerAdoptoTools(server: McpServer): void {
               subject,
               primaryUrl: primary_url,
               senderMode: sender_mode,
+              ...(layout !== undefined ? { layout } : {}),
+              ...(accent_color !== undefined ? { accentColor: accent_color } : {}),
+              ...(cta_label !== undefined ? { ctaLabel: cta_label } : {}),
+              ...(preheader !== undefined ? { preheader } : {}),
               ...(variables !== undefined ? { variables } : {}),
               text,
               html,
             },
+          },
+        },
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_get_master_template",
+    {
+      description:
+        "Get the project's master email template configuration (GET /v1/master-template).",
+      inputSchema: {
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+      },
+    },
+    async ({ project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/master-template`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to read master template by project_id.",
+        );
+      }
+      return adoptoRequest(
+        "/v1/master-template",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_update_master_template",
+    {
+      description:
+        "Configure the project's master email template (visual branding or custom HTML skeleton with {{body}}).",
+      inputSchema: {
+        mode: z.enum(["visual", "custom_html"]).describe("Master template mode"),
+        base_layout: z
+          .enum(["clean", "card", "newsletter", "founder"])
+          .default("card")
+          .describe("Base visual style"),
+        brand_name: z.string().max(120).nullable().optional().describe("Brand name override"),
+        logo_url: z.string().url().nullable().optional().describe("HTTPS logo URL"),
+        accent_color: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .default("#275835")
+          .describe("Accent color (#RRGGBB)"),
+        bg_color: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .default("#f4f5f0")
+          .describe("Background color (#RRGGBB)"),
+        header_badge: z.string().max(60).nullable().optional().describe("Optional header badge"),
+        footer_text: z.string().max(400).nullable().optional().describe("Optional footer text"),
+        footer_links: z
+          .array(z.object({ label: z.string().min(1).max(60), url: z.string().min(1) }))
+          .max(6)
+          .optional()
+          .describe("Footer links (supports {{unsubscribeUrl}})"),
+        custom_html: z
+          .string()
+          .nullable()
+          .optional()
+          .describe("Custom HTML skeleton with {{body}} (required when mode='custom_html')"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
+      },
+    },
+    async ({
+      mode,
+      base_layout,
+      brand_name,
+      logo_url,
+      accent_color,
+      bg_color,
+      header_badge,
+      footer_text,
+      footer_links,
+      custom_html,
+      project_id,
+      api_key,
+    }) => {
+      const payload = {
+        mode,
+        baseLayout: base_layout,
+        brandName: brand_name ?? null,
+        logoUrl: logo_url ?? null,
+        accentColor: accent_color,
+        bgColor: bg_color,
+        headerBadge: header_badge ?? null,
+        footerText: footer_text ?? null,
+        footerLinks: footer_links ?? [],
+        customHtml: custom_html ?? null,
+      };
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/master-template`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to update master template by project_id.",
+          { method: "PUT", body: payload },
+        );
+      }
+      return adoptoRequest(
+        "/v1/master-template",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required.",
+        { method: "PUT", body: payload },
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_send_email",
+    {
+      description:
+        "Send a transactional email directly using an approved template version and the project's master template (POST /v1/send).",
+      inputSchema: {
+        template_id: z.string().uuid().describe("Template UUID"),
+        recipient_email: z.string().email().describe("Recipient email address"),
+        version: z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Optional template version (defaults to latest approved version)"),
+        values: z
+          .record(z.string(), z.string().nullable())
+          .optional()
+          .describe("Template variable values"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key with events:write scope"),
+      },
+    },
+    async ({ template_id, recipient_email, version, values, api_key }) => {
+      return adoptoRequest(
+        "/v1/send",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or api_key) is required to send transactional email in Adopto.",
+        {
+          method: "POST",
+          body: {
+            templateId: template_id,
+            recipientEmail: recipient_email,
+            ...(version !== undefined ? { version } : {}),
+            ...(values !== undefined ? { values } : {}),
           },
         },
       );
@@ -983,6 +1200,322 @@ export function registerAdoptoTools(server: McpServer): void {
           true,
         );
       }
+    },
+  );
+
+  server.registerTool(
+    "adopto_get_flow_stats",
+    {
+      description:
+        "Get funnel analytics for a sequence/flow in Adopto: entries, sent/rejected emails per step, and goal conversion rate.",
+      inputSchema: {
+        flow_id: z.string().uuid().describe("Flow UUID"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key with diagnostics:read scope"),
+      },
+    },
+    async ({ flow_id, project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/flows/${encodeURIComponent(flow_id)}/stats`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to read flow stats by project_id.",
+        );
+      }
+      return adoptoRequest(
+        `/v1/flows/${encodeURIComponent(flow_id)}/stats`,
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required to read flow stats.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_check_domain_dns",
+    {
+      description:
+        "Check SPF, DKIM, DMARC, and MX DNS records for the project's sender domain (or a specified domain) to diagnose email deliverability.",
+      inputSchema: {
+        domain: z
+          .string()
+          .optional()
+          .describe("Optional domain or email to check (defaults to configured SMTP fromEmail)"),
+        dkim_selector: z
+          .string()
+          .optional()
+          .describe("Optional DKIM selector (e.g. 'dkim', 'mail', 'unione')"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key"),
+      },
+    },
+    async ({ domain, dkim_selector, project_id, api_key }) => {
+      const qs = new URLSearchParams();
+      if (domain) qs.set("domain", domain);
+      if (dkim_selector) qs.set("dkimSelector", dkim_selector);
+      const suffix = qs.toString() ? `?${qs.toString()}` : "";
+
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/smtp/dns-check${suffix}`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to check DNS by project_id.",
+        );
+      }
+      return adoptoRequest(
+        `/v1/smtp/dns-check${suffix}`,
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required to check DNS.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_get_user_timeline",
+    {
+      description:
+        "Get chronological activity timeline for a user (events, flow entries, sent emails, opens/clicks).",
+      inputSchema: {
+        user_id: z.string().min(1).describe("External user ID"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key with diagnostics:read scope"),
+      },
+    },
+    async ({ user_id, project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/users/${encodeURIComponent(user_id)}/timeline`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to read user timeline by project_id.",
+        );
+      }
+      return adoptoRequest(
+        `/v1/profiles/${encodeURIComponent(user_id)}/timeline`,
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required to read user timeline.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_simulate_flow",
+    {
+      description:
+        "Simulate an event against a flow draft to verify entry conditions, exit triggers, and goal matching without side effects.",
+      inputSchema: {
+        flow_id: z.string().uuid().describe("Flow UUID"),
+        event_name: z.string().min(1).describe("Event name to simulate"),
+        user_id: z.string().optional().describe("Optional existing userId for profile conditions"),
+        properties: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("Optional event properties"),
+        project_id: z
+          .string()
+          .uuid()
+          .optional()
+          .describe("Optional project UUID (uses DEVPASS_TOKEN)"),
+        api_key: z
+          .string()
+          .min(1)
+          .optional()
+          .describe("Optional project API key with drafts:read scope"),
+      },
+    },
+    async ({ flow_id, event_name, user_id, properties, project_id, api_key }) => {
+      const body = {
+        eventName: event_name,
+        ...(user_id ? { userId: user_id } : {}),
+        ...(properties ? { properties } : {}),
+      };
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/flows/${encodeURIComponent(flow_id)}/simulate`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required to simulate flow by project_id.",
+          { method: "POST", body },
+        );
+      }
+      return adoptoRequest(
+        `/v1/flows/${encodeURIComponent(flow_id)}/simulate`,
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id with DEVPASS_TOKEN) is required to simulate flow.",
+        { method: "POST", body },
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_list_topics",
+    {
+      description: "List mailing list topics (subscription categories) in Adopto.",
+      inputSchema: {
+        project_id: z.string().uuid().optional().describe("Optional project UUID"),
+        api_key: z.string().min(1).optional().describe("Optional project API key"),
+      },
+    },
+    async ({ project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/topics`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required.",
+        );
+      }
+      return adoptoRequest(
+        "/v1/topics",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id) is required.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_create_topic",
+    {
+      description: "Create a mailing list topic (subscription category) in Adopto.",
+      inputSchema: {
+        key: z.string().min(2).max(64).describe("Slug key (e.g. 'digest', 'releases')"),
+        name: z.string().min(1).max(120).describe("Display name"),
+        description: z.string().optional().describe("Optional description"),
+        project_id: z.string().uuid().optional().describe("Optional project UUID"),
+        api_key: z.string().min(1).optional().describe("Optional project API key"),
+      },
+    },
+    async ({ key, name, description, project_id, api_key }) => {
+      const body = { key, name, ...(description ? { description } : {}) };
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/topics`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required.",
+          { method: "POST", body },
+        );
+      }
+      return adoptoRequest(
+        "/v1/topics",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id) is required.",
+        { method: "POST", body },
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_list_broadcasts",
+    {
+      description: "List one-off broadcast campaigns in Adopto.",
+      inputSchema: {
+        project_id: z.string().uuid().optional().describe("Optional project UUID"),
+        api_key: z.string().min(1).optional().describe("Optional project API key"),
+      },
+    },
+    async ({ project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/broadcasts`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required.",
+        );
+      }
+      return adoptoRequest(
+        "/v1/broadcasts",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id) is required.",
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_create_broadcast",
+    {
+      description: "Create a segmented one-off broadcast draft in Adopto.",
+      inputSchema: {
+        name: z.string().min(1).max(140).describe("Campaign name"),
+        template_id: z.string().uuid().describe("Approved template UUID"),
+        version: z.number().int().positive().optional().describe("Optional template version"),
+        list_key: z.string().optional().describe("Optional mailing list topic key"),
+        filter_properties: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe("Profile properties JSONB filter (e.g. { plan: 'pro' })"),
+        project_id: z.string().uuid().optional().describe("Optional project UUID"),
+        api_key: z.string().min(1).optional().describe("Optional project API key"),
+      },
+    },
+    async ({ name, template_id, version, list_key, filter_properties, project_id, api_key }) => {
+      const body = {
+        name,
+        templateId: template_id,
+        ...(version !== undefined ? { version } : {}),
+        ...(list_key ? { listKey: list_key } : {}),
+        ...(filter_properties ? { filterProperties: filter_properties } : {}),
+      };
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/broadcasts`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required.",
+          { method: "POST", body },
+        );
+      }
+      return adoptoRequest(
+        "/v1/broadcasts",
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id) is required.",
+        { method: "POST", body },
+      );
+    },
+  );
+
+  server.registerTool(
+    "adopto_send_broadcast",
+    {
+      description: "Send a draft broadcast campaign to all matching subscribers via project SMTP.",
+      inputSchema: {
+        broadcast_id: z.string().uuid().describe("Broadcast UUID"),
+        project_id: z.string().uuid().optional().describe("Optional project UUID"),
+        api_key: z.string().min(1).optional().describe("Optional project API key"),
+      },
+    },
+    async ({ broadcast_id, project_id, api_key }) => {
+      if (project_id) {
+        return adoptoRequest(
+          `/v1/projects/${encodeURIComponent(project_id)}/broadcasts/${encodeURIComponent(broadcast_id)}/send`,
+          getAdoptoOwnerToken(),
+          "DEVPASS_TOKEN is required.",
+          { method: "POST", body: {} },
+        );
+      }
+      return adoptoRequest(
+        `/v1/broadcasts/${encodeURIComponent(broadcast_id)}/send`,
+        getAdoptoProjectToken(api_key),
+        "ADOPTO_API_KEY (or project_id) is required.",
+        { method: "POST", body: {} },
+      );
     },
   );
 }

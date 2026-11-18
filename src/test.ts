@@ -257,6 +257,8 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
       arguments: {
         user_id: "usr_42",
         email: "dev@example.com",
+        locale: "ru-RU",
+        timezone: "Europe/Moscow",
         profile_version: 5,
         properties: {
           signupSource: "rungate",
@@ -291,6 +293,8 @@ test("Adopto MCP tools send v1 user sync, event intake and list 8 ecosystem flow
     assert.equal(calls[0]?.auth, "Bearer adopto_secret_test");
     assert.equal(calls[0]?.body?.profileVersion, 5);
     assert.equal(calls[0]?.body?.email, "dev@example.com");
+    assert.equal(calls[0]?.body?.locale, "ru-RU");
+    assert.equal(calls[0]?.body?.timezone, "Europe/Moscow");
 
     assert.deepEqual(calls[1], {
       url: "https://api.adopto.example.test/v1/events",

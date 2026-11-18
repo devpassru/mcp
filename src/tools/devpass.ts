@@ -64,6 +64,7 @@ export function registerDevPassTools(server: McpServer): void {
             Authorization: `Bearer ${activeToken}`,
             Accept: "application/json",
           },
+          signal: AbortSignal.timeout(15_000),
         });
 
         if (response.ok) {

@@ -1,5 +1,6 @@
-import { readFile, stat } from "node:fs/promises";
-import { basename } from "node:path";
+import { readFile, realpath, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, isAbsolute, relative, resolve } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -135,12 +136,45 @@ export function registerRunDeployTools(server: McpServer): void {
     },
     async ({ project_id, archive_path, commit_sha, commit_message }) => {
       let fileBuffer: Buffer;
+      let filename: string;
       try {
-        const info = await stat(archive_path);
+        const cwd = await realpath(process.cwd());
+        const tmp = await realpath(tmpdir());
+        const resolvedArchive = await realpath(resolve(cwd, archive_path));
+        const isInside = (baseDir: string) => {
+          const rel = relative(baseDir, resolvedArchive);
+          return !rel.startsWith("..") && !isAbsolute(rel);
+        };
+        if (!isInside(cwd) && !isInside(tmp)) {
+          return formatJsonResult(
+            {
+              error: "Archive path must be inside the current working directory or temp directory",
+            },
+            true,
+          );
+        }
+
+        const lower = resolvedArchive.toLowerCase();
+        if (!lower.endsWith(".zip") && !lower.endsWith(".tar.gz") && !lower.endsWith(".tgz")) {
+          return formatJsonResult(
+            { error: "Only .zip, .tar.gz, or .tgz archive files are allowed" },
+            true,
+          );
+        }
+
+        const info = await stat(resolvedArchive);
         if (!info.isFile()) {
           return formatJsonResult({ error: `Path is not a file: ${archive_path}` }, true);
         }
-        fileBuffer = await readFile(archive_path);
+        const maxBytes = 100 * 1024 * 1024;
+        if (info.size > maxBytes) {
+          return formatJsonResult(
+            { error: `Archive exceeds maximum allowed size (${maxBytes} bytes)` },
+            true,
+          );
+        }
+        filename = basename(resolvedArchive);
+        fileBuffer = await readFile(resolvedArchive);
       } catch (err) {
         return formatJsonResult(
           {
@@ -151,8 +185,9 @@ export function registerRunDeployTools(server: McpServer): void {
         );
       }
 
-      const filename = basename(archive_path);
-      const mimeType = filename.endsWith(".zip") ? "application/zip" : "application/gzip";
+      const mimeType = filename.toLowerCase().endsWith(".zip")
+        ? "application/zip"
+        : "application/gzip";
       const formData = new FormData();
       formData.append("file", new Blob([new Uint8Array(fileBuffer)], { type: mimeType }), filename);
       formData.append("source", "mcp");

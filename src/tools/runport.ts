@@ -40,9 +40,7 @@ export function registerRunPortTools(server: McpServer): void {
           "-R",
           `${remoteBind}:localhost:${port}`,
           "-o",
-          "StrictHostKeyChecking=no",
-          "-o",
-          "UserKnownHostsFile=/dev/null",
+          "StrictHostKeyChecking=accept-new",
           "-T",
           remoteHost,
         ];
@@ -210,7 +208,9 @@ export function registerRunPortTools(server: McpServer): void {
         const url = new URL(targetHost);
         if (path) url.searchParams.set("path", path);
 
-        const res = await fetch(url.toString());
+        const res = await fetch(url.toString(), {
+          signal: AbortSignal.timeout(15_000),
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         type ReviewItem = {
@@ -277,18 +277,31 @@ export function registerRunPortTools(server: McpServer): void {
           .string()
           .regex(/^[a-z0-9][a-z0-9-]{0,62}$/i, "Invalid subdomain format")
           .describe("Subdomain of the tunnel"),
-        reviewId: z.string().describe("UUID of the review item to resolve"),
+        reviewId: z
+          .string()
+          .regex(/^[a-zA-Z0-9_-]{1,128}$/, "Invalid reviewId format")
+          .describe("UUID of the review item to resolve"),
       },
     },
     async ({ subdomain, reviewId }) => {
+      if (!process.env.DEVPASS_TOKEN) {
+        return {
+          content: [{ type: "text", text: "DEVPASS_TOKEN is required to resolve reviews." }],
+          isError: true,
+        };
+      }
       const domain = process.env.RUNPORT_DOMAIN || process.env.TUNNEL_DOMAIN || "runport.ru";
-      const targetHost = `https://${subdomain}.${domain}/__runport/reviews/${reviewId}`;
+      const targetHost = `https://${subdomain}.${domain}/__runport/reviews/${encodeURIComponent(reviewId)}`;
 
       try {
         const res = await fetch(targetHost, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.DEVPASS_TOKEN}`,
+          },
           body: JSON.stringify({ status: "resolved" }),
+          signal: AbortSignal.timeout(15_000),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return {

@@ -1016,6 +1016,18 @@ export function registerAdoptoTools(server: McpServer): void {
       inputSchema: {
         user_id: z.string().min(1).describe("Stable user ID from id.devpass.ru"),
         email: z.string().email().describe("User email address"),
+        locale: z
+          .string()
+          .min(1)
+          .max(64)
+          .optional()
+          .describe("Optional BCP 47 locale tag (e.g. 'ru', 'ru-RU', 'en-US')"),
+        timezone: z
+          .string()
+          .min(1)
+          .max(100)
+          .optional()
+          .describe("Optional IANA timezone (e.g. 'Europe/Moscow', 'UTC') for Quiet Hours"),
         profile_version: z
           .number()
           .int()
@@ -1035,11 +1047,11 @@ export function registerAdoptoTools(server: McpServer): void {
           .describe("Optional project API key (overrides ADOPTO_API_KEY)"),
       },
     },
-    async ({ user_id, email, profile_version, properties = {}, api_key }) => {
+    async ({ user_id, email, locale, timezone, profile_version, properties = {}, api_key }) => {
       const apiUrl = getAdoptoBaseUrl();
       const token = getAdoptoProjectToken(api_key);
       const version = profile_version ?? Math.floor(Date.now() / 1000);
-      const payload = {
+      const payload: Record<string, unknown> = {
         profileVersion: version,
         email,
         emailVerified: true,
@@ -1051,6 +1063,8 @@ export function registerAdoptoTools(server: McpServer): void {
         },
         properties,
       };
+      if (locale !== undefined) payload.locale = locale;
+      if (timezone !== undefined) payload.timezone = timezone;
 
       if (!token) {
         return formatJsonResult(

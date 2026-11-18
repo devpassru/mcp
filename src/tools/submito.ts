@@ -53,6 +53,7 @@ export function registerSubmitoTools(server: McpServer): void {
           const idUrl = process.env.DEVPASS_ID_URL || "https://id.devpass.ru";
           const meRes = await fetch(`${idUrl}/api/v1/me`, {
             headers: { Authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(15_000),
           }).catch(() => null);
           if (meRes?.ok) {
             const me = (await meRes.json().catch(() => null)) as {
@@ -93,6 +94,7 @@ export function registerSubmitoTools(server: McpServer): void {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15_000),
         });
 
         if (!res.ok) {
@@ -205,6 +207,7 @@ export function registerSubmitoTools(server: McpServer): void {
         }
         const res = await fetch(`${apiUrl}/v1/forms?offset=${offset}`, {
           headers,
+          signal: AbortSignal.timeout(15_000),
         });
         if (!res.ok) {
           const errorText = await res.text().catch(() => "");

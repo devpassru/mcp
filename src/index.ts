@@ -17,7 +17,7 @@ dotenv.config({ quiet: true });
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "devpass",
-    version: "1.2.0",
+    version: "1.4.0",
   });
 
   registerDevPassTools(server);

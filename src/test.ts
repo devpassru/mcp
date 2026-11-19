@@ -71,6 +71,15 @@ test("createServer initializes MCP server with expected tools", async () => {
     "answero_get_conversation",
     "answero_reply_conversation",
     "answero_update_conversation_status",
+    "rekuro_list_plans",
+    "rekuro_create_plan",
+    "rekuro_list_payments",
+    "rekuro_get_payment",
+    "rekuro_create_payment",
+    "rekuro_list_subscriptions",
+    "rekuro_get_subscription",
+    "rekuro_create_subscription",
+    "rekuro_cancel_subscription",
   ];
 
   for (const tool of expectedTools) {

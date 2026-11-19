@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import { registerAdoptoTools } from "./tools/adopto.js";
 import { registerAnsweroTools } from "./tools/answero.js";
 import { registerDevPassTools } from "./tools/devpass.js";
+import { registerRekuroTools } from "./tools/rekuro.js";
 import { registerRunDeployTools } from "./tools/rundeploy.js";
 import { registerRunGateTools } from "./tools/rungate.js";
 import { registerRunPingTools } from "./tools/runping.js";
@@ -27,6 +28,7 @@ export function createServer(): McpServer {
   registerAdoptoTools(server);
   registerRunDeployTools(server);
   registerAnsweroTools(server);
+  registerRekuroTools(server);
 
   return server;
 }
